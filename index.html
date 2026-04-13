@@ -1,0 +1,1551 @@
+<!DOCTYPE html>
+<html lang="ru" class="light">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Deliv'em — Сервис поручений в Абхазии</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+<script>
+tailwind.config = {
+  darkMode: "class",
+  theme: {
+    extend: {
+      colors: {
+        "primary": "#00236f",
+        "on-primary": "#ffffff",
+        "primary-container": "#1e3a8a",
+        "on-primary-container": "#90a8ff",
+        "primary-fixed": "#dce1ff",
+        "primary-fixed-dim": "#b6c4ff",
+        "secondary": "#006c49",
+        "on-secondary": "#ffffff",
+        "secondary-container": "#6cf8bb",
+        "on-secondary-container": "#00714d",
+        "secondary-fixed": "#6ffbbe",
+        "secondary-fixed-dim": "#4edea3",
+        "on-secondary-fixed": "#002113",
+        "on-secondary-fixed-variant": "#005236",
+        "surface": "#f7f9fb",
+        "surface-dim": "#d8dadc",
+        "surface-bright": "#f7f9fb",
+        "surface-variant": "#e0e3e5",
+        "on-surface": "#191c1e",
+        "on-surface-variant": "#444651",
+        "surface-container-lowest": "#ffffff",
+        "surface-container-low": "#f2f4f6",
+        "surface-container": "#eceef0",
+        "surface-container-high": "#e6e8ea",
+        "surface-container-highest": "#e0e3e5",
+        "outline": "#757682",
+        "outline-variant": "#c5c5d3",
+        "inverse-surface": "#2d3133",
+        "inverse-on-surface": "#eff1f3",
+        "error": "#ba1a1a",
+        "background": "#f7f9fb",
+        "on-background": "#191c1e",
+        "tertiary": "#4b1c00",
+        "tertiary-container": "#6e2c00",
+        "on-tertiary-container": "#f39461",
+      },
+      borderRadius: {
+        "DEFAULT": "1rem",
+        "lg": "2rem",
+        "xl": "3rem",
+        "full": "9999px",
+      },
+      fontFamily: {
+        "sans": ["Inter", "sans-serif"],
+      }
+    }
+  }
+}
+</script>
+<style>
+  * { font-family: 'Inter', sans-serif; }
+  .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; vertical-align: middle; }
+  .fill-icon { font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+  .glass { background: rgba(255,255,255,0.72); backdrop-filter: blur(14px); border: 1.5px solid rgba(197,197,211,0.18); }
+  .grad-cta { background: linear-gradient(135deg, #00236f 0%, #006c49 100%); }
+  .grad-green { background: linear-gradient(135deg, #006c49 0%, #6cf8bb 100%); }
+  .page { display: none; }
+  .page.active { display: flex; }
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-thumb { background: #c5c5d3; border-radius: 10px; }
+  .nav-link { display: flex; align-items: center; gap: 12px; padding: 10px 16px; border-radius: 9999px; transition: all .2s; color: #444651; font-weight: 500; cursor: pointer; }
+  .nav-link:hover { background: rgba(0,35,111,0.07); color: #00236f; }
+  .nav-link.active { background: #dce1ff; color: #00236f; font-weight: 700; }
+  .task-card { background: #f2f4f6; border-radius: 1rem; padding: 1rem; transition: background .2s; cursor: pointer; }
+  .task-card:hover { background: #e6e8ea; }
+  .btn-primary { background: #00236f; color: #fff; border-radius: 9999px; padding: 12px 24px; font-weight: 700; cursor: pointer; transition: opacity .2s, transform .15s; border: none; }
+  .btn-primary:hover { opacity: .9; transform: scale(1.02); }
+  .btn-green { border-radius: 9999px; padding: 12px 24px; font-weight: 700; cursor: pointer; transition: all .2s; border: none; color: #fff; }
+  .btn-green { background: linear-gradient(135deg, #006c49 0%, #4edea3 100%); }
+  .btn-green:hover { opacity: .9; transform: scale(1.02); }
+  .btn-ghost { border-radius: 9999px; padding: 10px 20px; font-weight: 600; cursor: pointer; background: #eceef0; color: #191c1e; border: none; transition: background .2s; }
+  .btn-ghost:hover { background: #e0e3e5; }
+  .input-field { width: 100%; background: #e0e3e5; border: none; border-radius: 9999px; padding: 14px 20px; font-size: .9rem; outline: none; transition: box-shadow .2s; }
+  .input-field:focus { box-shadow: 0 0 0 3px rgba(0,35,111,0.15); }
+  .textarea-field { width: 100%; background: #e0e3e5; border: none; border-radius: 1rem; padding: 14px 20px; font-size: .9rem; outline: none; resize: none; transition: box-shadow .2s; }
+  .textarea-field:focus { box-shadow: 0 0 0 3px rgba(0,35,111,0.15); }
+  .label-sm { font-size: .7rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #444651; margin-bottom: 6px; display: block; }
+  .star-rating span { cursor: pointer; font-size: 1.4rem; color: #c5c5d3; transition: color .15s; }
+  .star-rating span.on { color: #f59e0b; }
+  .badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 9999px; font-size: .65rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+  .badge-green { background: #6cf8bb33; color: #006c49; }
+  .badge-blue { background: #dce1ff; color: #00236f; }
+  .badge-orange { background: #fff3e0; color: #e65100; }
+  .badge-gray { background: #eceef0; color: #444651; }
+  .badge-red { background: #ffdad6; color: #ba1a1a; }
+  .sidebar { width: 72px; min-width: 72px; transition: width .3s; }
+  @media(min-width:900px){ .sidebar { width: 240px; min-width: 240px; } }
+  .sidebar .nav-label { display: none; }
+  @media(min-width:900px){ .sidebar .nav-label { display: inline; } }
+  .avatar { width: 40px; height: 40px; border-radius: 9999px; background: #dce1ff; display: flex; align-items: center; justify-content: center; font-weight: 800; color: #00236f; font-size: .95rem; overflow: hidden; flex-shrink: 0; }
+  .avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .type-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 14px 12px; border-radius: 1rem; border: 2px solid transparent; cursor: pointer; transition: all .2s; background: #f2f4f6; }
+  .type-btn:hover { background: #e6e8ea; }
+  .type-btn.selected { background: #dce1ff; border-color: #00236f; }
+  .type-btn .type-icon { font-size: 1.8rem; }
+  .chat-bubble-me { background: #00236f; color: #fff; border-radius: 1rem 1rem 0.25rem 1rem; padding: 10px 14px; max-width: 75%; align-self: flex-end; }
+  .chat-bubble-them { background: #f2f4f6; color: #191c1e; border-radius: 1rem 1rem 1rem 0.25rem; padding: 10px 14px; max-width: 75%; align-self: flex-start; }
+  .progress-bar { height: 8px; border-radius: 9999px; background: #e0e3e5; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 9999px; background: linear-gradient(90deg, #006c49, #6cf8bb); transition: width .5s; }
+  .courier-card { background: #fff; border-radius: 1.25rem; padding: 1.25rem; display: flex; align-items: center; gap: 1rem; cursor: pointer; transition: box-shadow .2s; }
+  .courier-card:hover { box-shadow: 0 4px 24px rgba(0,35,111,0.09); }
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(25,28,30,.45); z-index: 100; align-items: center; justify-content: center; padding: 1rem; }
+  .modal-overlay.open { display: flex; }
+  .modal-box { background: #fff; border-radius: 1.5rem; width: 100%; max-width: 540px; max-height: 90vh; overflow-y: auto; box-shadow: 0 24px 64px rgba(0,0,0,.14); }
+  .toast { position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%); background: #191c1e; color: #fff; padding: 12px 24px; border-radius: 9999px; font-size: .85rem; font-weight: 600; z-index: 9999; opacity: 0; transition: opacity .3s; pointer-events: none; }
+  .toast.show { opacity: 1; }
+</style>
+</head>
+<body class="bg-surface text-on-surface overflow-hidden h-screen">
+
+<!-- ═══════════════════════════════════════════════════════
+     AUTH PAGE
+═══════════════════════════════════════════════════════ -->
+<div id="page-auth" class="page active flex-col items-center justify-center min-h-screen bg-surface relative overflow-auto py-12">
+  <!-- Decorative background -->
+  <div class="absolute inset-0 pointer-events-none overflow-hidden">
+    <div style="position:absolute;top:-120px;right:-120px;width:480px;height:480px;border-radius:9999px;background:linear-gradient(135deg,#dce1ff55,#6cf8bb33);filter:blur(60px)"></div>
+    <div style="position:absolute;bottom:-80px;left:-80px;width:360px;height:360px;border-radius:9999px;background:linear-gradient(135deg,#6cf8bb22,#dce1ff44);filter:blur(50px)"></div>
+  </div>
+
+  <div class="relative z-10 w-full max-w-md mx-auto px-4">
+    <!-- Logo -->
+    <div class="text-center mb-8">
+      <div class="inline-flex items-center gap-2 mb-3">
+        <div style="width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,#00236f,#006c49);display:flex;align-items:center;justify-content:center;">
+          <span class="material-symbols-outlined text-white" style="font-size:24px">local_shipping</span>
+        </div>
+        <h1 style="font-size:1.8rem;font-weight:900;color:#00236f;letter-spacing:-.02em;">Deliv'em</h1>
+      </div>
+      <p class="text-on-surface-variant text-sm font-medium">Сервис микропоручений в Абхазии</p>
+    </div>
+
+    <!-- Auth Card -->
+    <div class="glass rounded-lg p-8">
+      <!-- Tabs -->
+      <div class="flex gap-2 mb-6 bg-surface-container-low rounded-full p-1">
+        <button onclick="switchAuth('login')" id="tab-login" class="flex-1 py-2 rounded-full text-sm font-700 transition-all bg-white text-primary font-bold shadow-sm">Войти</button>
+        <button onclick="switchAuth('register')" id="tab-register" class="flex-1 py-2 rounded-full text-sm transition-all text-on-surface-variant font-semibold">Регистрация</button>
+      </div>
+
+      <!-- LOGIN FORM -->
+      <div id="form-login">
+        <div class="flex flex-col gap-4">
+          <div>
+            <label class="label-sm">Телефон или Email</label>
+            <input id="login-email" class="input-field" type="text" placeholder="+7 (940) 000-00-00"/>
+          </div>
+          <div>
+            <label class="label-sm">Пароль</label>
+            <div class="relative">
+              <input id="login-pass" class="input-field pr-12" type="password" placeholder="••••••••"/>
+              <button onclick="togglePass('login-pass')" class="absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant">
+                <span class="material-symbols-outlined text-base">visibility</span>
+              </button>
+            </div>
+          </div>
+          <button onclick="doLogin()" class="btn-primary w-full mt-2" style="font-size:.95rem;padding:14px;">Войти</button>
+          <p class="text-center text-xs text-on-surface-variant">Нет аккаунта? <a onclick="switchAuth('register')" class="text-secondary font-bold cursor-pointer">Зарегистрироваться</a></p>
+        </div>
+      </div>
+
+      <!-- REGISTER FORM -->
+      <div id="form-register" style="display:none">
+        <!-- Role selector -->
+        <div class="mb-5">
+          <label class="label-sm text-center block mb-3">Я регистрируюсь как</label>
+          <div class="grid grid-cols-2 gap-3">
+            <button onclick="selectRole('customer')" id="role-customer" class="type-btn selected flex-col">
+              <span class="material-symbols-outlined" style="font-size:2rem;color:#00236f">person</span>
+              <span class="text-sm font-bold text-primary">Заказчик</span>
+              <span class="text-xs text-on-surface-variant text-center leading-tight">Размещаю поручения</span>
+            </button>
+            <button onclick="selectRole('courier')" id="role-courier" class="type-btn flex-col">
+              <span class="material-symbols-outlined" style="font-size:2rem;color:#006c49">delivery_dining</span>
+              <span class="text-sm font-bold" style="color:#006c49">Курьер</span>
+              <span class="text-xs text-on-surface-variant text-center leading-tight">Выполняю поручения</span>
+            </button>
+          </div>
+        </div>
+        <div class="flex flex-col gap-4">
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="label-sm">Имя</label>
+              <input id="reg-name" class="input-field" type="text" placeholder="Алексей"/>
+            </div>
+            <div>
+              <label class="label-sm">Фамилия</label>
+              <input id="reg-surname" class="input-field" type="text" placeholder="Гицба"/>
+            </div>
+          </div>
+          <div>
+            <label class="label-sm">Номер телефона</label>
+            <input id="reg-phone" class="input-field" type="tel" placeholder="+7 (940) 000-00-00"/>
+          </div>
+          <div>
+            <label class="label-sm">Email</label>
+            <input id="reg-email" class="input-field" type="email" placeholder="alex@mail.ru"/>
+          </div>
+          <div>
+            <label class="label-sm">Город в Абхазии</label>
+            <select id="reg-city" class="input-field" style="background:#e0e3e5;cursor:pointer;">
+              <option>Сухум</option><option>Гагра</option><option>Гудаута</option>
+              <option>Новый Афон</option><option>Очамчыра</option><option>Ткуарчал</option>
+              <option>Гал</option><option>Пицунда</option>
+            </select>
+          </div>
+          <div>
+            <label class="label-sm">Пароль</label>
+            <div class="relative">
+              <input id="reg-pass" class="input-field pr-12" type="password" placeholder="Минимум 8 символов"/>
+              <button onclick="togglePass('reg-pass')" class="absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant">
+                <span class="material-symbols-outlined text-base">visibility</span>
+              </button>
+            </div>
+          </div>
+          <!-- Courier: transport type -->
+          <div id="reg-transport-block" style="display:none">
+            <label class="label-sm">Тип транспорта</label>
+            <div class="grid grid-cols-3 gap-2">
+              <button onclick="selectTransport('foot')" class="type-btn type-transport selected text-xs" data-t="foot"><span class="material-symbols-outlined">directions_walk</span>Пешком</button>
+              <button onclick="selectTransport('bicycle')" class="type-btn type-transport text-xs" data-t="bicycle"><span class="material-symbols-outlined">directions_bike</span>Велосипед</button>
+              <button onclick="selectTransport('car')" class="type-btn type-transport text-xs" data-t="car"><span class="material-symbols-outlined">directions_car</span>Авто</button>
+            </div>
+          </div>
+          <button onclick="doRegister()" class="btn-primary w-full mt-1" style="font-size:.95rem;padding:14px;">Создать аккаунт</button>
+          <p class="text-center text-xs text-on-surface-variant">Уже есть аккаунт? <a onclick="switchAuth('login')" class="text-secondary font-bold cursor-pointer">Войти</a></p>
+        </div>
+      </div>
+    </div>
+    <p class="text-center text-xs text-on-surface-variant mt-4 opacity-60">© 2025 Deliv'em · Абхазия</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     APP SHELL (shown after login)
+═══════════════════════════════════════════════════════ -->
+<div id="page-app" class="page flex h-screen overflow-hidden">
+
+  <!-- SIDEBAR -->
+  <aside id="sidebar" class="sidebar flex flex-col bg-surface-container-lowest border-r-0 h-full flex-shrink-0 py-4" style="border-right:1px solid #eceef0;">
+    <!-- Logo -->
+    <div class="px-4 mb-6">
+      <div class="flex items-center gap-2">
+        <div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#00236f,#006c49);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <span class="material-symbols-outlined text-white" style="font-size:18px">local_shipping</span>
+        </div>
+        <div class="nav-label">
+          <div style="font-size:1rem;font-weight:900;color:#00236f;letter-spacing:-.02em;">Deliv'em</div>
+          <div style="font-size:.6rem;font-weight:700;letter-spacing:.1em;color:#757682;text-transform:uppercase;" id="sidebar-role-label">Заказчик</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Nav links (populated by JS based on role) -->
+    <nav id="sidebar-nav" class="flex-1 px-2 flex flex-col gap-1 overflow-y-auto"></nav>
+
+    <!-- Profile footer -->
+    <div class="px-3 pt-3 border-t" style="border-color:#eceef0;">
+      <div class="nav-link" onclick="navigate('profile')">
+        <div class="avatar" id="sidebar-avatar"><span>АГ</span></div>
+        <div class="nav-label">
+          <div class="text-sm font-bold text-on-surface" id="sidebar-name">Алексей Г.</div>
+          <div class="text-xs text-on-surface-variant" id="sidebar-city">Сухум</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN AREA -->
+  <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+    <!-- TOP BAR -->
+    <header class="h-14 flex items-center justify-between px-5 flex-shrink-0 glass" style="border-bottom:1px solid rgba(197,197,211,.18);">
+      <div class="flex items-center gap-3 flex-1 max-w-sm">
+        <span class="material-symbols-outlined text-on-surface-variant text-lg">search</span>
+        <input id="top-search" class="bg-transparent border-none outline-none text-sm flex-1" placeholder="Поиск..." type="text"/>
+      </div>
+      <div class="flex items-center gap-3">
+        <button onclick="navigate('messages')" class="relative p-1.5 rounded-full hover:bg-surface-container transition-colors">
+          <span class="material-symbols-outlined text-on-surface-variant" style="font-size:20px">chat_bubble</span>
+          <span id="msg-badge" class="absolute top-0 right-0 w-4 h-4 bg-secondary rounded-full text-white flex items-center justify-center" style="font-size:.55rem;font-weight:800;display:none">3</span>
+        </button>
+        <button class="relative p-1.5 rounded-full hover:bg-surface-container transition-colors">
+          <span class="material-symbols-outlined text-on-surface-variant" style="font-size:20px">notifications</span>
+          <span class="absolute top-0 right-0 w-2.5 h-2.5 bg-error rounded-full"></span>
+        </button>
+        <div class="w-px h-5 bg-outline-variant opacity-40"></div>
+        <div class="flex items-center gap-2 cursor-pointer" onclick="navigate('profile')">
+          <div class="avatar" style="width:32px;height:32px;font-size:.8rem;" id="topbar-avatar"><span>АГ</span></div>
+        </div>
+      </div>
+    </header>
+
+    <!-- PAGE CONTENT -->
+    <main class="flex-1 overflow-y-auto bg-surface">
+
+      <!-- ── CUSTOMER DASHBOARD ── -->
+      <section id="view-dashboard" class="view p-6 max-w-6xl mx-auto">
+        <div class="mb-6">
+          <h2 style="font-size:1.6rem;font-weight:800;color:#00236f;letter-spacing:-.02em;">Добро пожаловать, <span id="dash-name">Алексей</span> 👋</h2>
+          <p class="text-on-surface-variant text-sm mt-1">Вот что происходит с вашими поручениями</p>
+        </div>
+        <!-- Stats row -->
+        <div class="grid grid-cols-2 gap-4 mb-6" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr))">
+          <div class="bg-white rounded-lg p-5">
+            <p class="label-sm">Баланс кошелька</p>
+            <div class="flex items-end gap-1 mt-1"><span style="font-size:1.8rem;font-weight:900;color:#00236f" id="dash-balance">500</span><span class="text-sm font-bold text-on-surface-variant mb-1">₽</span></div>
+            <button onclick="navigate('wallet')" class="mt-3 btn-ghost text-xs py-1.5 px-3">Пополнить</button>
+          </div>
+          <div class="bg-white rounded-lg p-5">
+            <p class="label-sm">Активные поручения</p>
+            <div style="font-size:1.8rem;font-weight:900;color:#006c49" class="mt-1">2</div>
+            <button onclick="navigate('active')" class="mt-3 btn-ghost text-xs py-1.5 px-3">Смотреть</button>
+          </div>
+          <div class="bg-white rounded-lg p-5">
+            <p class="label-sm">Выполнено всего</p>
+            <div style="font-size:1.8rem;font-weight:900;color:#191c1e" class="mt-1">14</div>
+          </div>
+          <div class="bg-white rounded-lg p-5 flex flex-col justify-between">
+            <p class="label-sm">Новое поручение</p>
+            <button onclick="navigate('create')" class="btn-green text-sm mt-3">
+              <span class="material-symbols-outlined text-base">add</span> Создать
+            </button>
+          </div>
+        </div>
+        <!-- Active tasks -->
+        <div class="mb-6">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="font-bold text-base">Активные поручения</h3>
+            <button onclick="navigate('active')" class="text-xs text-secondary font-bold">Все →</button>
+          </div>
+          <div class="flex flex-col gap-3" id="dash-active-tasks"></div>
+        </div>
+        <!-- Recent archive -->
+        <div>
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="font-bold text-base">Последние поручения</h3>
+            <button onclick="navigate('orders')" class="text-xs text-secondary font-bold">Архив →</button>
+          </div>
+          <div class="flex flex-col gap-3" id="dash-recent-tasks"></div>
+        </div>
+      </section>
+
+      <!-- ── COURIER DASHBOARD ── -->
+      <section id="view-courier-dashboard" class="view p-6 max-w-6xl mx-auto" style="display:none">
+        <div class="mb-6">
+          <h2 style="font-size:1.6rem;font-weight:800;color:#00236f;letter-spacing:-.02em;">Привет, <span id="courier-dash-name">Давит</span> 👋</h2>
+          <p class="text-on-surface-variant text-sm mt-1">Ваша статистика и новые задания</p>
+        </div>
+        <!-- Stats -->
+        <div class="grid grid-cols-2 gap-4 mb-6" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr))">
+          <div class="bg-white rounded-lg p-5">
+            <p class="label-sm">Мой рейтинг</p>
+            <div class="flex items-center gap-1 mt-1">
+              <span style="font-size:1.8rem;font-weight:900;color:#f59e0b">4.8</span>
+              <span class="material-symbols-outlined fill-icon text-amber-400">star</span>
+            </div>
+          </div>
+          <div class="bg-white rounded-lg p-5">
+            <p class="label-sm">Выполнено</p>
+            <div style="font-size:1.8rem;font-weight:900;color:#006c49" class="mt-1">38</div>
+          </div>
+          <div class="bg-white rounded-lg p-5">
+            <p class="label-sm">Активное задание</p>
+            <div style="font-size:1.1rem;font-weight:700;color:#191c1e" class="mt-1">1 задание</div>
+            <button onclick="navigate('courier-active')" class="mt-2 btn-ghost text-xs py-1.5 px-3">Открыть</button>
+          </div>
+          <div class="bg-white rounded-lg p-5">
+            <p class="label-sm">Статус</p>
+            <div class="flex items-center gap-2 mt-2">
+              <div style="width:10px;height:10px;border-radius:9999px;background:#006c49;box-shadow:0 0 0 3px #6cf8bb55;"></div>
+              <span class="font-bold text-secondary text-sm">Онлайн</span>
+            </div>
+          </div>
+        </div>
+        <!-- New tasks feed preview -->
+        <div class="mb-4 flex items-center justify-between">
+          <h3 class="font-bold text-base">Новые поручения рядом</h3>
+          <button onclick="navigate('task-feed')" class="text-xs text-secondary font-bold">Все задания →</button>
+        </div>
+        <div class="flex flex-col gap-3" id="courier-feed-preview"></div>
+      </section>
+
+      <!-- ── ORDERS ARCHIVE ── -->
+      <section id="view-orders" class="view p-6 max-w-4xl mx-auto" style="display:none">
+        <h2 class="text-xl font-bold mb-1">Архив поручений</h2>
+        <p class="text-on-surface-variant text-sm mb-5">Все ваши завершённые и отменённые поручения</p>
+        <div class="flex gap-2 mb-5 overflow-x-auto pb-1">
+          <button onclick="filterOrders('all')" class="orders-filter-btn badge badge-blue">Все</button>
+          <button onclick="filterOrders('completed')" class="orders-filter-btn badge badge-green">Выполнены</button>
+          <button onclick="filterOrders('cancelled')" class="orders-filter-btn badge badge-red">Отменены</button>
+        </div>
+        <div id="orders-list" class="flex flex-col gap-3"></div>
+      </section>
+
+      <!-- ── ACTIVE ORDERS ── -->
+      <section id="view-active" class="view p-6 max-w-4xl mx-auto" style="display:none">
+        <h2 class="text-xl font-bold mb-1">Активные поручения</h2>
+        <p class="text-on-surface-variant text-sm mb-5">Поручения, которые выполняются прямо сейчас</p>
+        <div id="active-list" class="flex flex-col gap-4"></div>
+      </section>
+
+      <!-- ── TASK FEED (courier) ── -->
+      <section id="view-task-feed" class="view p-6 max-w-4xl mx-auto" style="display:none">
+        <h2 class="text-xl font-bold mb-1">Поиск заданий</h2>
+        <p class="text-on-surface-variant text-sm mb-4">Свободные поручения от заказчиков</p>
+        <!-- Filters -->
+        <div class="glass rounded-lg p-4 mb-5 flex flex-wrap gap-3">
+          <div>
+            <label class="label-sm">Тип</label>
+            <select class="input-field text-xs" style="padding:8px 14px;border-radius:9999px;">
+              <option>Все типы</option>
+              <option>Документы</option><option>Продукты</option><option>Материалы</option>
+              <option>Подарок</option><option>Встреча</option><option>Посылка</option>
+            </select>
+          </div>
+          <div>
+            <label class="label-sm">Город</label>
+            <select class="input-field text-xs" style="padding:8px 14px;border-radius:9999px;">
+              <option>Все города</option><option>Сухум</option><option>Гагра</option><option>Гудаута</option>
+            </select>
+          </div>
+          <div>
+            <label class="label-sm">Мин. оплата</label>
+            <input type="number" placeholder="₽" class="input-field text-xs" style="padding:8px 14px;border-radius:9999px;width:100px"/>
+          </div>
+        </div>
+        <div id="task-feed-list" class="flex flex-col gap-3"></div>
+      </section>
+
+      <!-- ── COURIER ACTIVE ── -->
+      <section id="view-courier-active" class="view p-6 max-w-4xl mx-auto" style="display:none">
+        <h2 class="text-xl font-bold mb-1">Мои активные задания</h2>
+        <p class="text-on-surface-variant text-sm mb-5">Задания, которые вы выполняете</p>
+        <div id="courier-active-list" class="flex flex-col gap-4"></div>
+      </section>
+
+      <!-- ── COURIERS LIST (customer) ── -->
+      <section id="view-couriers" class="view p-6 max-w-4xl mx-auto" style="display:none">
+        <h2 class="text-xl font-bold mb-1">Курьеры сервиса</h2>
+        <p class="text-on-surface-variant text-sm mb-5">Отсортированы по рейтингу</p>
+        <div id="couriers-list" class="flex flex-col gap-3"></div>
+      </section>
+
+      <!-- ── FAVORITES ── -->
+      <section id="view-favorites" class="view p-6 max-w-4xl mx-auto" style="display:none">
+        <h2 class="text-xl font-bold mb-1" id="fav-title">Избранные курьеры</h2>
+        <p class="text-on-surface-variant text-sm mb-5" id="fav-sub">Курьеры, которых вы добавили в избранное</p>
+        <div id="favorites-list" class="flex flex-col gap-3"></div>
+      </section>
+
+      <!-- ── CREATE TASK ── -->
+      <section id="view-create" class="view p-6 max-w-3xl mx-auto" style="display:none">
+        <h2 class="text-xl font-bold mb-1">Новое поручение</h2>
+        <p class="text-on-surface-variant text-sm mb-6">Заполните данные — курьеры увидят ваше задание</p>
+
+        <div class="flex flex-col gap-5">
+          <!-- Task type -->
+          <div class="bg-white rounded-lg p-5">
+            <label class="label-sm">Тип поручения</label>
+            <div class="grid gap-3 mt-2" style="grid-template-columns:repeat(auto-fill,minmax(100px,1fr))">
+              <button onclick="selectTaskType('documents')" class="task-type-btn type-btn selected" data-type="documents">
+                <span class="material-symbols-outlined" style="color:#00236f;font-size:1.6rem">description</span>
+                <span class="text-xs font-bold">Документы</span>
+              </button>
+              <button onclick="selectTaskType('groceries')" class="task-type-btn type-btn" data-type="groceries">
+                <span class="material-symbols-outlined" style="color:#006c49;font-size:1.6rem">shopping_basket</span>
+                <span class="text-xs font-bold">Продукты</span>
+              </button>
+              <button onclick="selectTaskType('materials')" class="task-type-btn type-btn" data-type="materials">
+                <span class="material-symbols-outlined" style="color:#7b5e00;font-size:1.6rem">construction</span>
+                <span class="text-xs font-bold">Материалы</span>
+              </button>
+              <button onclick="selectTaskType('gift')" class="task-type-btn type-btn" data-type="gift">
+                <span class="material-symbols-outlined" style="color:#ba1a1a;font-size:1.6rem">redeem</span>
+                <span class="text-xs font-bold">Подарок</span>
+              </button>
+              <button onclick="selectTaskType('meeting')" class="task-type-btn type-btn" data-type="meeting">
+                <span class="material-symbols-outlined" style="color:#4b1c00;font-size:1.6rem">groups</span>
+                <span class="text-xs font-bold">Встреча</span>
+              </button>
+              <button onclick="selectTaskType('parcel')" class="task-type-btn type-btn" data-type="parcel">
+                <span class="material-symbols-outlined" style="color:#004d6e;font-size:1.6rem">inventory_2</span>
+                <span class="text-xs font-bold">Посылка</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Main fields -->
+          <div class="bg-white rounded-lg p-5 flex flex-col gap-4">
+            <div>
+              <label class="label-sm">Название поручения</label>
+              <input id="task-title" class="input-field" placeholder="Например: передать документы в офис"/>
+            </div>
+            <div>
+              <label class="label-sm">Вознаграждение курьеру (₽)</label>
+              <input id="task-reward" class="input-field" type="number" placeholder="Сколько заработает курьер"/>
+            </div>
+          </div>
+
+          <!-- Addresses -->
+          <div class="bg-white rounded-lg p-5 flex flex-col gap-4">
+            <div>
+              <label class="label-sm" style="color:#00236f">📍 Откуда забрать</label>
+              <input id="task-from" class="input-field" placeholder="Адрес, ориентир или место в Абхазии"/>
+            </div>
+            <div class="flex items-center gap-2 py-1">
+              <div class="flex-1 h-px bg-surface-container-high"></div>
+              <span class="material-symbols-outlined text-secondary text-sm">arrow_downward</span>
+              <div class="flex-1 h-px bg-surface-container-high"></div>
+            </div>
+            <div>
+              <label class="label-sm" style="color:#006c49">🏁 Куда доставить</label>
+              <input id="task-to" class="input-field" placeholder="Адрес получателя"/>
+            </div>
+            <!-- Yandex Maps placeholder -->
+            <div style="height:180px;border-radius:1rem;overflow:hidden;background:#eceef0;position:relative;display:flex;align-items:center;justify-content:center;">
+              <div class="text-center">
+                <span class="material-symbols-outlined text-on-surface-variant" style="font-size:2.5rem">map</span>
+                <p class="text-xs text-on-surface-variant mt-1 font-semibold">Яндекс Карты<br/><span class="font-normal opacity-70">Подключатся при деплое</span></p>
+              </div>
+              <div class="absolute top-3 right-3">
+                <div class="glass rounded-full px-3 py-1 text-xs font-bold text-on-surface-variant flex items-center gap-1">
+                  <span class="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse inline-block"></span>GPS активен
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Deadline + description -->
+          <div class="bg-white rounded-lg p-5 flex flex-col gap-4">
+            <div>
+              <label class="label-sm">Срок выполнения</label>
+              <input id="task-deadline" class="input-field" type="datetime-local"/>
+            </div>
+            <div>
+              <label class="label-sm">Описание и особые пожелания</label>
+              <textarea id="task-desc" class="textarea-field" rows="4" placeholder="Особые инструкции для курьера..."></textarea>
+            </div>
+          </div>
+
+          <!-- My couriers -->
+          <div class="bg-white rounded-lg p-5">
+            <label class="label-sm">Назначить избранному курьеру (необязательно)</label>
+            <p class="text-xs text-on-surface-variant mb-3">Задание увидят только выбранные курьеры</p>
+            <div id="create-fav-couriers" class="flex flex-wrap gap-2"></div>
+          </div>
+
+          <!-- Fee notice + submit -->
+          <div class="rounded-lg p-6 relative overflow-hidden" style="background:linear-gradient(135deg,#00236f,#1e3a8a);">
+            <div class="absolute opacity-10 text-white" style="right:-20px;bottom:-20px;font-size:6rem;">
+              <span class="material-symbols-outlined" style="font-size:6rem">account_balance_wallet</span>
+            </div>
+            <div class="relative z-10">
+              <p class="text-white opacity-70 text-xs font-bold tracking-widest uppercase">Стоимость размещения</p>
+              <div class="flex items-end gap-2 my-2">
+                <span style="font-size:2.2rem;font-weight:900;color:#fff">100</span>
+                <span class="text-white font-bold text-lg mb-1">₽</span>
+                <span class="text-white opacity-60 text-xs mb-1.5 ml-1">спишется с кошелька</span>
+              </div>
+              <p class="text-white opacity-60 text-xs mb-4">Ваш баланс: <span id="create-balance" class="font-bold opacity-100">500 ₽</span></p>
+              <button onclick="submitTask()" class="btn-green font-black px-8 py-3" style="font-size:.95rem;">
+                <span class="material-symbols-outlined text-base">send</span> Опубликовать поручение
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── MESSAGES ── -->
+      <section id="view-messages" class="view" style="display:none;height:calc(100vh - 56px);">
+        <div class="flex h-full">
+          <!-- Chat list -->
+          <div class="w-72 flex-shrink-0 border-r flex flex-col" style="border-color:#eceef0;">
+            <div class="p-4 border-b" style="border-color:#eceef0;">
+              <h3 class="font-bold">Сообщения</h3>
+            </div>
+            <div id="chat-list" class="flex-1 overflow-y-auto"></div>
+          </div>
+          <!-- Chat window -->
+          <div class="flex-1 flex flex-col">
+            <div id="chat-header" class="p-4 border-b flex items-center gap-3" style="border-color:#eceef0;">
+              <div class="avatar" id="chat-avatar"><span>?</span></div>
+              <div>
+                <div class="font-bold text-sm" id="chat-name">Выберите чат</div>
+                <div class="text-xs text-on-surface-variant" id="chat-task-name">—</div>
+              </div>
+            </div>
+            <div id="chat-messages" class="flex-1 overflow-y-auto p-4 flex flex-col gap-3"></div>
+            <div class="p-4 border-t flex gap-3" style="border-color:#eceef0;">
+              <input id="chat-input" class="input-field flex-1 text-sm" style="border-radius:9999px;padding:10px 18px;" placeholder="Сообщение..." onkeydown="if(event.key==='Enter')sendMsg()"/>
+              <button onclick="sendMsg()" class="btn-primary" style="padding:10px 18px;font-size:.85rem;">
+                <span class="material-symbols-outlined text-base">send</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── WALLET ── -->
+      <section id="view-wallet" class="view p-6 max-w-2xl mx-auto" style="display:none">
+        <h2 class="text-xl font-bold mb-5">Кошелёк</h2>
+        <!-- Balance card -->
+        <div class="rounded-lg p-7 mb-6 relative overflow-hidden" style="background:linear-gradient(135deg,#00236f 0%,#006c49 100%);">
+          <div class="absolute opacity-10" style="right:-30px;top:-30px;font-size:9rem;">
+            <span class="material-symbols-outlined" style="font-size:9rem">account_balance_wallet</span>
+          </div>
+          <p class="text-white opacity-70 text-xs font-bold tracking-widest uppercase">Текущий баланс</p>
+          <div class="flex items-end gap-2 mt-2">
+            <span style="font-size:3rem;font-weight:900;color:#fff" id="wallet-balance">500</span>
+            <span class="text-white font-bold text-xl mb-1">₽</span>
+          </div>
+          <p class="text-white opacity-60 text-xs mt-1">Deliv'em · Внутренний кошелёк</p>
+        </div>
+        <!-- Top up -->
+        <div class="bg-white rounded-lg p-5 mb-4">
+          <h3 class="font-bold mb-3">Пополнить через AnyPay</h3>
+          <div class="grid grid-cols-3 gap-2 mb-4">
+            <button onclick="setAmount(200)" class="type-btn text-sm font-bold">200 ₽</button>
+            <button onclick="setAmount(500)" class="type-btn text-sm font-bold">500 ₽</button>
+            <button onclick="setAmount(1000)" class="type-btn text-sm font-bold">1000 ₽</button>
+          </div>
+          <div class="flex gap-3">
+            <input id="top-up-amount" class="input-field flex-1" type="number" placeholder="Сумма в рублях"/>
+            <button onclick="topUp()" class="btn-primary px-5">Пополнить</button>
+          </div>
+          <p class="text-xs text-on-surface-variant mt-2 opacity-70">Оплата через AnyPay · Безопасно</p>
+        </div>
+        <!-- Transaction history -->
+        <div class="bg-white rounded-lg p-5">
+          <h3 class="font-bold mb-3">История операций</h3>
+          <div id="tx-list" class="flex flex-col gap-2"></div>
+        </div>
+      </section>
+
+      <!-- ── PROFILE ── -->
+      <section id="view-profile" class="view p-6 max-w-2xl mx-auto" style="display:none">
+        <h2 class="text-xl font-bold mb-5">Настройки профиля</h2>
+        <div class="bg-white rounded-lg p-6 mb-4">
+          <!-- Avatar -->
+          <div class="flex items-center gap-4 mb-6">
+            <div class="avatar" style="width:72px;height:72px;font-size:1.6rem;" id="profile-avatar-big"><span id="profile-initials">АГ</span></div>
+            <div>
+              <p class="font-bold" id="profile-display-name">Алексей Гицба</p>
+              <p class="text-xs text-on-surface-variant" id="profile-role-label">Заказчик · Сухум</p>
+              <button class="text-xs text-secondary font-bold mt-1">Изменить фото</button>
+            </div>
+          </div>
+          <div class="flex flex-col gap-4">
+            <div class="grid grid-cols-2 gap-3">
+              <div><label class="label-sm">Имя</label><input id="prof-name" class="input-field" value="Алексей"/></div>
+              <div><label class="label-sm">Фамилия</label><input id="prof-surname" class="input-field" value="Гицба"/></div>
+            </div>
+            <div><label class="label-sm">Телефон</label><input id="prof-phone" class="input-field" type="tel" value="+7 (940) 123-45-67"/></div>
+            <div><label class="label-sm">Email</label><input id="prof-email" class="input-field" type="email" value="alex@mail.ru"/></div>
+            <div>
+              <label class="label-sm">Город</label>
+              <select id="prof-city" class="input-field" style="background:#e0e3e5;cursor:pointer;">
+                <option>Сухум</option><option>Гагра</option><option>Гудаута</option>
+                <option>Новый Афон</option><option>Очамчыра</option><option>Ткуарчал</option><option>Гал</option><option>Пицунда</option>
+              </select>
+            </div>
+            <div id="courier-profile-fields" style="display:none">
+              <label class="label-sm">Транспорт</label>
+              <select class="input-field" style="background:#e0e3e5;cursor:pointer;">
+                <option>Пешком</option><option>Велосипед</option><option>Мотоцикл</option><option>Автомобиль</option><option>Грузовик</option>
+              </select>
+              <div class="mt-3">
+                <label class="label-sm">О себе</label>
+                <textarea class="textarea-field mt-1" rows="3" placeholder="Расскажите заказчикам о себе..."></textarea>
+              </div>
+            </div>
+            <button onclick="saveProfile()" class="btn-primary">Сохранить изменения</button>
+          </div>
+        </div>
+        <div class="bg-white rounded-lg p-5">
+          <h3 class="font-bold mb-3 text-error">Опасная зона</h3>
+          <button onclick="doLogout()" class="btn-ghost text-error font-bold">
+            <span class="material-symbols-outlined text-base">logout</span> Выйти из аккаунта
+          </button>
+        </div>
+      </section>
+
+      <!-- ── ABOUT ── -->
+      <section id="view-about" class="view p-6 max-w-2xl mx-auto" style="display:none">
+        <div class="rounded-lg p-8 mb-6 text-center" style="background:linear-gradient(135deg,#00236f,#006c49);">
+          <div style="width:64px;height:64px;border-radius:18px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+            <span class="material-symbols-outlined text-white" style="font-size:2rem">local_shipping</span>
+          </div>
+          <h1 style="font-size:2rem;font-weight:900;color:#fff;letter-spacing:-.02em;">Deliv'em</h1>
+          <p class="text-white opacity-70 text-sm mt-1">Сервис микропоручений · Абхазия</p>
+        </div>
+        <div class="bg-white rounded-lg p-6 mb-4">
+          <h3 class="font-bold text-lg mb-3">О сервисе</h3>
+          <p class="text-on-surface-variant text-sm leading-relaxed mb-3">Deliv'em — первая P2P-платформа микропоручений в Республике Абхазия. Мы соединяем заказчиков и исполнителей, чтобы любая задача была выполнена быстро и надёжно.</p>
+          <p class="text-on-surface-variant text-sm leading-relaxed mb-3">Доставка документов, покупка продуктов, транспортировка материалов, передача подарков — всё это можно делегировать проверенным местным курьерам.</p>
+          <p class="text-on-surface-variant text-sm leading-relaxed">Сервис работает во всех городах Абхазии: Сухум, Гагра, Гудаута, Новый Афон, Очамчыра и других.</p>
+        </div>
+        <div class="bg-white rounded-lg p-6 mb-4">
+          <h3 class="font-bold text-lg mb-3">Как это работает</h3>
+          <div class="flex flex-col gap-4">
+            <div class="flex gap-4">
+              <div style="width:36px;height:36px;border-radius:9999px;background:#dce1ff;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:800;color:#00236f;">1</div>
+              <div><p class="font-bold text-sm">Заказчик создаёт поручение</p><p class="text-xs text-on-surface-variant">Описывает задачу, маршрут, срок и вознаграждение курьеру</p></div>
+            </div>
+            <div class="flex gap-4">
+              <div style="width:36px;height:36px;border-radius:9999px;background:#6cf8bb33;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:800;color:#006c49;">2</div>
+              <div><p class="font-bold text-sm">Курьер принимает задание</p><p class="text-xs text-on-surface-variant">Видит задания в ленте и выбирает подходящее</p></div>
+            </div>
+            <div class="flex gap-4">
+              <div style="width:36px;height:36px;border-radius:9999px;background:#eceef0;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:800;color:#191c1e;">3</div>
+              <div><p class="font-bold text-sm">Выполнение и оценка</p><p class="text-xs text-on-surface-variant">Задание выполнено — оба участника оставляют оценки</p></div>
+            </div>
+          </div>
+        </div>
+        <div class="bg-white rounded-lg p-6">
+          <h3 class="font-bold text-lg mb-3">Политика использования</h3>
+          <p class="text-on-surface-variant text-sm leading-relaxed">Полная политика конфиденциальности и условия использования сервиса находятся в разработке и будут опубликованы в ближайшее время.</p>
+          <p class="text-on-surface-variant text-sm leading-relaxed mt-2">Версия сервиса: <span class="font-bold text-on-surface">1.0.0 Beta</span> · 2025</p>
+        </div>
+      </section>
+
+      <!-- ── CONTACTS ── -->
+      <section id="view-contacts" class="view p-6 max-w-2xl mx-auto" style="display:none">
+        <h2 class="text-xl font-bold mb-1">Обратная связь</h2>
+        <p class="text-on-surface-variant text-sm mb-6">Есть вопросы или предложения? Напишите разработчику</p>
+        <div class="bg-white rounded-lg p-6">
+          <div class="flex flex-col gap-4">
+            <div class="grid grid-cols-2 gap-3">
+              <div><label class="label-sm">Ваше имя</label><input id="fb-name" class="input-field" placeholder="Алексей"/></div>
+              <div><label class="label-sm">Email</label><input id="fb-email" class="input-field" type="email" placeholder="alex@mail.ru"/></div>
+            </div>
+            <div>
+              <label class="label-sm">Тема</label>
+              <select id="fb-subject" class="input-field" style="background:#e0e3e5;cursor:pointer;">
+                <option>Вопрос о сервисе</option>
+                <option>Сообщить об ошибке</option>
+                <option>Предложение по улучшению</option>
+                <option>Сотрудничество</option>
+                <option>Другое</option>
+              </select>
+            </div>
+            <div>
+              <label class="label-sm">Сообщение</label>
+              <textarea id="fb-message" class="textarea-field" rows="5" placeholder="Опишите ваш вопрос или предложение подробнее..."></textarea>
+            </div>
+            <button onclick="sendFeedback()" class="btn-primary">
+              <span class="material-symbols-outlined text-base">send</span> Отправить сообщение
+            </button>
+          </div>
+        </div>
+        <!-- Contact info -->
+        <div class="bg-white rounded-lg p-5 mt-4">
+          <h3 class="font-bold mb-3">Контакты</h3>
+          <div class="flex flex-col gap-3">
+            <div class="flex items-center gap-3"><span class="material-symbols-outlined text-secondary text-base">email</span><span class="text-sm">support@delivem.ru</span></div>
+            <div class="flex items-center gap-3"><span class="material-symbols-outlined text-secondary text-base">phone</span><span class="text-sm">+7 (940) 000-00-00</span></div>
+            <div class="flex items-center gap-3"><span class="material-symbols-outlined text-secondary text-base">location_on</span><span class="text-sm">Сухум, Республика Абхазия</span></div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<!-- ═══ MODALS ═══ -->
+
+<!-- Task detail modal -->
+<div class="modal-overlay" id="modal-task">
+  <div class="modal-box p-6">
+    <div class="flex justify-between items-start mb-4">
+      <div>
+        <div id="modal-task-badge" class="badge badge-blue mb-2">Тип</div>
+        <h3 class="text-xl font-bold" id="modal-task-title">Название</h3>
+      </div>
+      <button onclick="closeModal('modal-task')" class="p-2 rounded-full hover:bg-surface-container-low">
+        <span class="material-symbols-outlined text-on-surface-variant">close</span>
+      </button>
+    </div>
+    <div class="flex flex-col gap-4">
+      <div class="bg-surface-container-low rounded-lg p-4">
+        <div class="flex justify-between text-sm">
+          <div><p class="label-sm">Откуда</p><p class="font-semibold" id="modal-from">—</p></div>
+          <span class="material-symbols-outlined text-secondary">arrow_forward</span>
+          <div class="text-right"><p class="label-sm">Куда</p><p class="font-semibold" id="modal-to">—</p></div>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div class="bg-surface-container-low rounded-lg p-3"><p class="label-sm">Вознаграждение</p><p class="font-bold text-secondary" id="modal-reward">—</p></div>
+        <div class="bg-surface-container-low rounded-lg p-3"><p class="label-sm">Срок</p><p class="font-bold" id="modal-deadline">—</p></div>
+      </div>
+      <div class="bg-surface-container-low rounded-lg p-4"><p class="label-sm">Описание</p><p class="text-sm mt-1" id="modal-desc">—</p></div>
+      <div class="flex items-center gap-3 bg-surface-container-low rounded-lg p-3">
+        <div class="avatar" id="modal-customer-avatar"><span>?</span></div>
+        <div><p class="label-sm">Заказчик</p><p class="font-bold text-sm" id="modal-customer-name">—</p></div>
+      </div>
+    </div>
+    <div id="modal-task-actions" class="flex gap-3 mt-5"></div>
+  </div>
+</div>
+
+<!-- Rating modal -->
+<div class="modal-overlay" id="modal-rating">
+  <div class="modal-box p-6 text-center">
+    <span class="material-symbols-outlined fill-icon text-amber-400" style="font-size:3rem">star</span>
+    <h3 class="text-xl font-bold mt-2 mb-1">Оцените исполнителя</h3>
+    <p class="text-on-surface-variant text-sm mb-5">Ваша оценка помогает другим заказчикам</p>
+    <div class="star-rating flex justify-center gap-2 mb-5" id="star-rating">
+      <span onclick="setRating(1)" data-r="1">★</span>
+      <span onclick="setRating(2)" data-r="2">★</span>
+      <span onclick="setRating(3)" data-r="3">★</span>
+      <span onclick="setRating(4)" data-r="4">★</span>
+      <span onclick="setRating(5)" data-r="5">★</span>
+    </div>
+    <textarea class="textarea-field mb-4" rows="3" placeholder="Комментарий (необязательно)..." id="rating-comment"></textarea>
+    <div class="flex gap-3">
+      <button onclick="closeModal('modal-rating')" class="btn-ghost flex-1">Пропустить</button>
+      <button onclick="submitRating()" class="btn-primary flex-1">Отправить</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- ═══════════════════════════════════════════════════════
+     JAVASCRIPT
+═══════════════════════════════════════════════════════ -->
+<script>
+// ── STATE ──────────────────────────────────────────────
+let appState = {
+  user: null,
+  role: 'customer',
+  balance: 500,
+  currentView: 'dashboard',
+  selectedRole: 'customer',
+  selectedTransport: 'foot',
+  selectedTaskType: 'documents',
+  selectedRating: 5,
+  activeChatId: null,
+};
+
+// ── MOCK DATA ───────────────────────────────────────────
+const TASK_TYPES = {
+  documents: { label: 'Документы', icon: 'description', color: '#00236f' },
+  groceries:  { label: 'Продукты',  icon: 'shopping_basket', color: '#006c49' },
+  materials:  { label: 'Материалы', icon: 'construction', color: '#7b5e00' },
+  gift:       { label: 'Подарок',   icon: 'redeem', color: '#ba1a1a' },
+  meeting:    { label: 'Встреча',   icon: 'groups', color: '#4b1c00' },
+  parcel:     { label: 'Посылка',   icon: 'inventory_2', color: '#004d6e' },
+};
+
+const STATUS_LABELS = {
+  published: { label: 'Свободен', cls: 'badge-green' },
+  in_progress: { label: 'Выполняется', cls: 'badge-orange' },
+  completed: { label: 'Выполнено', cls: 'badge-blue' },
+  cancelled: { label: 'Отменено', cls: 'badge-red' },
+  matched: { label: 'Принят', cls: 'badge-orange' },
+};
+
+let mockTasks = [
+  { id:'t1', type:'documents', title:'Передать документы в нотариус', from:'пл. Свободы, Сухум', to:'ул. Лакоба, 12', reward:400, deadline:'2025-07-15 14:00', desc:'Срочные документы! Позвоните перед приходом.', status:'in_progress', customer:'Алексей Г.', courier:'Давит К.', progress:65 },
+  { id:'t2', type:'groceries', title:'Купить продукты в Магните', from:'Магнит, ул. Сухумская', to:'ул. Пушкина, 5', reward:250, deadline:'2025-07-15 18:00', desc:'Список продуктов в сообщении.', status:'matched', customer:'Алексей Г.', courier:'Нина А.', progress:10 },
+  { id:'t3', type:'gift', title:'Доставить цветы', from:'Цветочный магазин, Гагра', to:'ул. Абазинская, 23', reward:300, deadline:'2025-07-14 12:00', desc:'Букет роз для Марины. Позвоните заранее.', status:'completed', customer:'Алексей Г.', courier:'Ахра Б.', progress:100 },
+  { id:'t4', type:'materials', title:'Привезти плитку со склада', from:'Строительный склад, ш. Гумистинское', to:'ул. Краснодарская, 8', reward:1200, deadline:'2025-07-16 10:00', desc:'20 упаковок плитки. Нужна машина.', status:'published', customer:'Алексей Г.', courier:null, progress:0 },
+  { id:'t5', type:'parcel', title:'Передать посылку другу', from:'Новый Афон, пл. Туристов', to:'Сухум, ул. Инал-ипа', reward:350, deadline:'2025-07-17 16:00', desc:'Небольшая коробка, обращаться осторожно.', status:'published', customer:'Ирина М.', courier:null, progress:0 },
+  { id:'t6', type:'documents', title:'Забрать справку из горадминистрации', from:'Горадминистрация, Сухум', to:'ул. Адмиральского, 3', reward:200, deadline:'2025-07-15 17:00', desc:'Справка о составе семьи.', status:'published', customer:'Важа Г.', courier:null, progress:0 },
+];
+
+const mockCouriers = [
+  { id:'c1', name:'Давит Кварацхелия', city:'Сухум', rating:4.9, tasks:87, transport:'car', initials:'ДК', bio:'Профессиональный курьер с 3-летним опытом. Всегда на связи.' },
+  { id:'c2', name:'Нина Авидзба', city:'Сухум', rating:4.8, tasks:64, transport:'bicycle', initials:'НА', bio:'Быстрая доставка по центру города.' },
+  { id:'c3', name:'Ахра Барциц', city:'Гагра', rating:4.7, tasks:112, transport:'motorcycle', initials:'АБ', bio:'Опытный курьер, знаю все районы Абхазии.' },
+  { id:'c4', name:'Мзия Джикирба', city:'Гудаута', rating:4.6, tasks:43, transport:'foot', initials:'МД', bio:'Всегда аккуратно, всегда вовремя.' },
+];
+
+const mockTransactions = [
+  { type:'task_fee', desc:'Комиссия: Передать документы', amount:-100, date:'14.07.2025' },
+  { type:'top_up', desc:'Пополнение через AnyPay', amount:+500, date:'13.07.2025' },
+  { type:'task_fee', desc:'Комиссия: Купить продукты', amount:-100, date:'12.07.2025' },
+  { type:'top_up', desc:'Пополнение через AnyPay', amount:+300, date:'10.07.2025' },
+  { type:'task_fee', desc:'Комиссия: Доставить цветы', amount:-100, date:'09.07.2025' },
+];
+
+const mockChats = [
+  { id:'ch1', taskId:'t1', partner:'Давит К.', initials:'ДК', lastMsg:'Буду через 10 минут', time:'14:23', messages:[
+    {me:false, text:'Добрый день, задание принял!', time:'14:10'},
+    {me:true, text:'Отлично! Документы ждут на ресепшн.', time:'14:12'},
+    {me:false, text:'Понял, выезжаю.', time:'14:15'},
+    {me:false, text:'Буду через 10 минут', time:'14:23'},
+  ]},
+  { id:'ch2', taskId:'t2', partner:'Нина А.', initials:'НА', lastMsg:'Список получила', time:'11:05', messages:[
+    {me:true, text:'Нина, список продуктов скину фото.', time:'11:00'},
+    {me:false, text:'Список получила', time:'11:05'},
+  ]},
+];
+
+let favCouriers = ['c1', 'c3'];
+
+// ── AUTH ────────────────────────────────────────────────
+function switchAuth(tab) {
+  const isLogin = tab === 'login';
+  document.getElementById('form-login').style.display = isLogin ? '' : 'none';
+  document.getElementById('form-register').style.display = isLogin ? 'none' : '';
+  document.getElementById('tab-login').className = isLogin
+    ? 'flex-1 py-2 rounded-full text-sm font-bold transition-all bg-white text-primary font-bold shadow-sm'
+    : 'flex-1 py-2 rounded-full text-sm transition-all text-on-surface-variant font-semibold';
+  document.getElementById('tab-register').className = isLogin
+    ? 'flex-1 py-2 rounded-full text-sm transition-all text-on-surface-variant font-semibold'
+    : 'flex-1 py-2 rounded-full text-sm font-bold transition-all bg-white text-primary font-bold shadow-sm';
+}
+
+function selectRole(role) {
+  appState.selectedRole = role;
+  document.getElementById('role-customer').className = role === 'customer' ? 'type-btn selected flex-col' : 'type-btn flex-col';
+  document.getElementById('role-courier').className = role === 'courier' ? 'type-btn selected flex-col' : 'type-btn flex-col';
+  document.getElementById('reg-transport-block').style.display = role === 'courier' ? '' : 'none';
+}
+
+function selectTransport(t) {
+  appState.selectedTransport = t;
+  document.querySelectorAll('.type-transport').forEach(b => {
+    b.classList.toggle('selected', b.dataset.t === t);
+  });
+}
+
+function togglePass(id) {
+  const el = document.getElementById(id);
+  el.type = el.type === 'password' ? 'text' : 'password';
+}
+
+function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  if (!email) { showToast('Введите телефон или email'); return; }
+  // Simulate login
+  appState.user = { name: 'Алексей', surname: 'Гицба', phone: '+7 (940) 123-45-67', email: email, city: 'Сухум' };
+  appState.role = 'customer';
+  enterApp();
+}
+
+function doRegister() {
+  const name = document.getElementById('reg-name').value.trim();
+  const phone = document.getElementById('reg-phone').value.trim();
+  const email = document.getElementById('reg-email').value.trim();
+  const city = document.getElementById('reg-city').value;
+  if (!name || !phone || !email) { showToast('Заполните все обязательные поля'); return; }
+  appState.user = { name, surname: document.getElementById('reg-surname').value.trim(), phone, email, city };
+  appState.role = appState.selectedRole;
+  enterApp();
+}
+
+function enterApp() {
+  document.getElementById('page-auth').classList.remove('active');
+  document.getElementById('page-app').classList.add('active');
+  buildSidebar();
+  updateSidebarUser();
+  const defaultView = appState.role === 'customer' ? 'dashboard' : 'courier-dashboard';
+  navigate(defaultView);
+  document.getElementById('msg-badge').style.display = appState.role === 'customer' ? 'flex' : 'none';
+}
+
+function doLogout() {
+  appState.user = null;
+  document.getElementById('page-app').classList.remove('active');
+  document.getElementById('page-auth').classList.add('active');
+  showToast('Вы вышли из аккаунта');
+}
+
+// ── SIDEBAR ─────────────────────────────────────────────
+const NAV_CUSTOMER = [
+  { id:'dashboard', icon:'dashboard', label:'Обзор' },
+  { id:'active', icon:'rocket_launch', label:'Активные' },
+  { id:'orders', icon:'history', label:'Архив заказов' },
+  { id:'create', icon:'add_circle', label:'Создать поручение' },
+  { id:'couriers', icon:'directions_bike', label:'Курьеры' },
+  { id:'favorites', icon:'favorite', label:'Избранные' },
+  { id:'messages', icon:'chat_bubble', label:'Сообщения' },
+  { id:'wallet', icon:'account_balance_wallet', label:'Кошелёк' },
+  { id:'about', icon:'info', label:'О сервисе' },
+  { id:'contacts', icon:'support_agent', label:'Контакты' },
+];
+const NAV_COURIER = [
+  { id:'courier-dashboard', icon:'dashboard', label:'Обзор' },
+  { id:'task-feed', icon:'search', label:'Поиск заданий' },
+  { id:'courier-active', icon:'rocket_launch', label:'Мои задания' },
+  { id:'orders', icon:'history', label:'Архив' },
+  { id:'favorites', icon:'favorite', label:'Избранные заказчики' },
+  { id:'messages', icon:'chat_bubble', label:'Сообщения' },
+  { id:'about', icon:'info', label:'О сервисе' },
+  { id:'contacts', icon:'support_agent', label:'Контакты' },
+];
+
+function buildSidebar() {
+  const nav = appState.role === 'customer' ? NAV_CUSTOMER : NAV_COURIER;
+  const el = document.getElementById('sidebar-nav');
+  el.innerHTML = nav.map(n => `
+    <div class="nav-link" id="nav-${n.id}" onclick="navigate('${n.id}')">
+      <span class="material-symbols-outlined" style="font-size:20px;flex-shrink:0;">${n.icon}</span>
+      <span class="nav-label">${n.label}</span>
+    </div>`).join('');
+  document.getElementById('sidebar-role-label').textContent = appState.role === 'customer' ? 'Заказчик' : 'Курьер';
+}
+
+function updateSidebarUser() {
+  if (!appState.user) return;
+  const initials = ((appState.user.name||'?')[0] + (appState.user.surname||'?')[0]).toUpperCase();
+  document.getElementById('sidebar-name').textContent = appState.user.name + ' ' + (appState.user.surname||'');
+  document.getElementById('sidebar-city').textContent = appState.user.city || 'Абхазия';
+  ['sidebar-avatar','topbar-avatar'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = `<span>${initials}</span>`;
+  });
+  document.getElementById('dash-name').textContent = appState.user.name;
+  document.getElementById('courier-dash-name').textContent = appState.user.name;
+  document.getElementById('profile-initials').textContent = initials;
+  document.getElementById('profile-avatar-big').innerHTML = `<span id="profile-initials">${initials}</span>`;
+  document.getElementById('profile-display-name').textContent = appState.user.name + ' ' + (appState.user.surname||'');
+  document.getElementById('profile-role-label').textContent = (appState.role === 'customer' ? 'Заказчик' : 'Курьер') + ' · ' + (appState.user.city||'Абхазия');
+  document.getElementById('prof-name').value = appState.user.name || '';
+  document.getElementById('prof-surname').value = appState.user.surname || '';
+  document.getElementById('prof-phone').value = appState.user.phone || '';
+  document.getElementById('prof-email').value = appState.user.email || '';
+  document.getElementById('courier-profile-fields').style.display = appState.role === 'courier' ? '' : 'none';
+}
+
+// ── NAVIGATION ──────────────────────────────────────────
+const VIEW_MAP = {
+  'dashboard': 'dashboard',
+  'courier-dashboard': 'courier-dashboard',
+  'orders': 'orders',
+  'active': 'active',
+  'task-feed': 'task-feed',
+  'courier-active': 'courier-active',
+  'couriers': 'couriers',
+  'favorites': 'favorites',
+  'create': 'create',
+  'messages': 'messages',
+  'wallet': 'wallet',
+  'profile': 'profile',
+  'about': 'about',
+  'contacts': 'contacts',
+};
+
+function navigate(view) {
+  appState.currentView = view;
+  // Hide all views
+  document.querySelectorAll('.view').forEach(v => v.style.display = 'none');
+  const target = document.getElementById('view-' + (VIEW_MAP[view] || view));
+  if (target) target.style.display = 'block';
+  // Update nav active state
+  document.querySelectorAll('.nav-link[id^="nav-"]').forEach(el => el.classList.remove('active'));
+  const activeNav = document.getElementById('nav-' + view);
+  if (activeNav) activeNav.classList.add('active');
+  // Render view content
+  renderView(view);
+  // Scroll to top
+  const main = document.querySelector('main');
+  if (main) main.scrollTop = 0;
+}
+
+function renderView(view) {
+  switch(view) {
+    case 'dashboard': renderCustomerDashboard(); break;
+    case 'courier-dashboard': renderCourierDashboard(); break;
+    case 'orders': renderOrders(); break;
+    case 'active': renderActive(); break;
+    case 'task-feed': renderTaskFeed(); break;
+    case 'courier-active': renderCourierActive(); break;
+    case 'couriers': renderCouriers(); break;
+    case 'favorites': renderFavorites(); break;
+    case 'messages': renderMessages(); break;
+    case 'wallet': renderWallet(); break;
+    case 'create': renderCreate(); break;
+  }
+}
+
+// ── RENDER FUNCTIONS ────────────────────────────────────
+
+function taskTypeIcon(type) {
+  const t = TASK_TYPES[type] || TASK_TYPES.documents;
+  return `<span class="material-symbols-outlined" style="color:${t.color}">${t.icon}</span>`;
+}
+
+function taskTypeBadge(type) {
+  const t = TASK_TYPES[type] || TASK_TYPES.documents;
+  return `<span class="badge badge-blue"><span class="material-symbols-outlined" style="font-size:.7rem;color:${t.color}">${t.icon}</span>${t.label}</span>`;
+}
+
+function statusBadge(status) {
+  const s = STATUS_LABELS[status] || { label: status, cls: 'badge-gray' };
+  return `<span class="badge ${s.cls}">${s.label}</span>`;
+}
+
+function progressBar(pct) {
+  return `<div class="progress-bar mt-2"><div class="progress-fill" style="width:${pct}%"></div></div>`;
+}
+
+function renderCustomerDashboard() {
+  const active = mockTasks.filter(t => t.status === 'in_progress' || t.status === 'matched');
+  const recent = mockTasks.filter(t => t.status === 'completed' || t.status === 'cancelled').slice(0,3);
+  document.getElementById('dash-balance').textContent = appState.balance;
+  document.getElementById('create-balance').textContent = appState.balance + ' ₽';
+  document.getElementById('wallet-balance').textContent = appState.balance;
+  document.getElementById('dash-active-tasks').innerHTML = active.map(t => taskCardHTML(t, true)).join('') || '<p class="text-on-surface-variant text-sm">Нет активных поручений</p>';
+  document.getElementById('dash-recent-tasks').innerHTML = recent.map(t => taskCardHTML(t, false)).join('') || '<p class="text-on-surface-variant text-sm">Нет завершённых поручений</p>';
+}
+
+function renderCourierDashboard() {
+  const feed = mockTasks.filter(t => t.status === 'published').slice(0,3);
+  document.getElementById('courier-feed-preview').innerHTML = feed.map(t => feedCardHTML(t)).join('') || '<p class="text-on-surface-variant text-sm">Нет новых заданий</p>';
+}
+
+function taskCardHTML(task, showProgress) {
+  return `<div class="task-card" onclick="openTaskModal('${task.id}')">
+    <div class="flex items-start justify-between gap-3">
+      <div class="flex items-center gap-2 flex-1 min-w-0">
+        ${taskTypeIcon(task.type)}
+        <div class="min-w-0">
+          <p class="font-bold text-sm truncate">${task.title}</p>
+          <p class="text-xs text-on-surface-variant mt-0.5">${task.from} → ${task.to}</p>
+        </div>
+      </div>
+      <div class="flex flex-col items-end gap-1 flex-shrink-0">
+        ${statusBadge(task.status)}
+        <span class="font-bold text-sm text-secondary">${task.reward} ₽</span>
+      </div>
+    </div>
+    ${showProgress && task.progress > 0 ? `
+      <div class="mt-2">
+        ${progressBar(task.progress)}
+        <p class="text-xs text-on-surface-variant mt-1">${task.courier ? 'Курьер: ' + task.courier : 'Ожидание курьера'}</p>
+      </div>` : `<p class="text-xs text-on-surface-variant mt-2">${task.deadline}</p>`}
+  </div>`;
+}
+
+function feedCardHTML(task) {
+  return `<div class="task-card" onclick="openTaskModalCourier('${task.id}')">
+    <div class="flex items-start justify-between gap-3">
+      <div class="flex items-center gap-2 flex-1 min-w-0">
+        ${taskTypeIcon(task.type)}
+        <div class="min-w-0">
+          <p class="font-bold text-sm truncate">${task.title}</p>
+          <p class="text-xs text-on-surface-variant mt-0.5">${task.from} → ${task.to}</p>
+          <p class="text-xs text-on-surface-variant">До: ${task.deadline}</p>
+        </div>
+      </div>
+      <div class="flex flex-col items-end gap-1 flex-shrink-0">
+        <span class="font-black text-secondary" style="font-size:1.1rem">${task.reward} ₽</span>
+        ${statusBadge(task.status)}
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderOrders() {
+  const done = mockTasks.filter(t => t.status === 'completed' || t.status === 'cancelled');
+  document.getElementById('orders-list').innerHTML = done.map(t => taskCardHTML(t, false)).join('') || '<p class="text-on-surface-variant text-sm">Нет завершённых поручений</p>';
+}
+
+function filterOrders(f) {
+  const tasks = f === 'all'
+    ? mockTasks.filter(t => t.status === 'completed' || t.status === 'cancelled')
+    : mockTasks.filter(t => t.status === f);
+  document.getElementById('orders-list').innerHTML = tasks.map(t => taskCardHTML(t, false)).join('') || '<p class="text-on-surface-variant text-sm py-4">Нет поручений</p>';
+}
+
+function renderActive() {
+  const active = appState.role === 'customer'
+    ? mockTasks.filter(t => (t.status === 'in_progress' || t.status === 'matched'))
+    : mockTasks.filter(t => t.status === 'in_progress' && t.courier === 'Давит К.');
+  document.getElementById('active-list').innerHTML = active.map(t => `
+    <div class="bg-white rounded-lg p-5">
+      <div class="flex items-start justify-between gap-3 mb-3">
+        <div class="flex items-center gap-2">
+          ${taskTypeIcon(t.type)}
+          <div>
+            <p class="font-bold">${t.title}</p>
+            <p class="text-xs text-on-surface-variant">${t.from} → ${t.to}</p>
+          </div>
+        </div>
+        ${statusBadge(t.status)}
+      </div>
+      <div class="mb-3">
+        <div class="flex justify-between text-xs text-on-surface-variant mb-1">
+          <span>Прогресс</span><span>${t.progress}%</span>
+        </div>
+        ${progressBar(t.progress)}
+      </div>
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <div class="avatar" style="width:28px;height:28px;font-size:.7rem;">${t.courier ? `<span>${t.courier[0]}</span>` : '<span>?</span>'}</div>
+          <span class="text-xs font-semibold">${t.courier || 'Ожидание курьера...'}</span>
+        </div>
+        <div class="flex gap-2">
+          <button onclick="navigate('messages')" class="btn-ghost text-xs py-1.5 px-3">Чат</button>
+          ${t.status === 'in_progress' ? `<button onclick="completeTask('${t.id}')" class="btn-green text-xs py-1.5 px-3">Выполнено</button>` : ''}
+        </div>
+      </div>
+    </div>`).join('') || '<div class="text-center py-12"><span class="material-symbols-outlined text-on-surface-variant" style="font-size:3rem">inbox</span><p class="text-on-surface-variant text-sm mt-2">Нет активных поручений</p></div>';
+}
+
+function renderTaskFeed() {
+  const feed = mockTasks.filter(t => t.status === 'published');
+  document.getElementById('task-feed-list').innerHTML = feed.map(t => feedCardHTML(t)).join('') || '<p class="text-on-surface-variant text-sm py-8 text-center">Нет доступных заданий</p>';
+}
+
+function renderCourierActive() {
+  const tasks = [mockTasks[0]]; // simulate 1 active for courier
+  document.getElementById('courier-active-list').innerHTML = tasks.map(t => `
+    <div class="bg-white rounded-lg p-5">
+      <div class="flex items-start justify-between gap-3 mb-4">
+        <div class="flex items-center gap-2">
+          ${taskTypeIcon(t.type)}
+          <div>
+            <p class="font-bold">${t.title}</p>
+            <p class="text-xs text-on-surface-variant">${t.from} → ${t.to}</p>
+          </div>
+        </div>
+        <span class="font-black text-secondary" style="font-size:1.2rem">${t.reward} ₽</span>
+      </div>
+      ${progressBar(t.progress)}
+      <p class="text-xs text-on-surface-variant mt-2 mb-4">Прогресс: ${t.progress}%</p>
+      <div class="flex gap-3">
+        <button onclick="navigate('messages')" class="btn-ghost flex-1 text-sm">Чат с заказчиком</button>
+        <button onclick="courierComplete('${t.id}')" class="btn-green flex-1 text-sm">Завершить</button>
+      </div>
+    </div>`).join('');
+}
+
+function renderCouriers() {
+  document.getElementById('couriers-list').innerHTML = mockCouriers
+    .sort((a,b) => b.rating - a.rating)
+    .map(c => courierCardHTML(c, true)).join('');
+}
+
+function courierCardHTML(c, showAdd) {
+  const isFav = favCouriers.includes(c.id);
+  return `<div class="courier-card">
+    <div class="avatar" style="width:48px;height:48px;font-size:1.1rem;flex-shrink:0;">${c.initials}</div>
+    <div class="flex-1 min-w-0">
+      <div class="flex items-center gap-2">
+        <p class="font-bold">${c.name}</p>
+        <span class="badge badge-blue text-xs">${c.city}</span>
+      </div>
+      <div class="flex items-center gap-3 mt-1">
+        <div class="flex items-center gap-1 text-amber-500 text-xs font-bold">
+          <span class="material-symbols-outlined fill-icon" style="font-size:.9rem">star</span>${c.rating}
+        </div>
+        <span class="text-xs text-on-surface-variant">${c.tasks} заданий</span>
+        <span class="text-xs text-on-surface-variant">
+          <span class="material-symbols-outlined" style="font-size:.9rem">${c.transport === 'car' ? 'directions_car' : c.transport === 'bicycle' ? 'directions_bike' : c.transport === 'motorcycle' ? 'two_wheeler' : 'directions_walk'}</span>
+        </span>
+      </div>
+      ${c.bio ? `<p class="text-xs text-on-surface-variant mt-1 truncate">${c.bio}</p>` : ''}
+    </div>
+    ${showAdd ? `<button onclick="toggleFavCourier('${c.id}',this)" class="p-2 rounded-full hover:bg-surface-container-low transition-colors" title="${isFav ? 'Убрать из избранных' : 'В избранные'}">
+      <span class="material-symbols-outlined ${isFav ? 'fill-icon text-red-400' : 'text-on-surface-variant'}" style="font-size:20px">favorite</span>
+    </button>` : ''}
+  </div>`;
+}
+
+function toggleFavCourier(id, btn) {
+  if (favCouriers.includes(id)) {
+    favCouriers = favCouriers.filter(x => x !== id);
+    showToast('Убрано из избранных');
+  } else {
+    favCouriers.push(id);
+    showToast('Добавлено в избранное');
+  }
+  const icon = btn.querySelector('.material-symbols-outlined');
+  const isFav = favCouriers.includes(id);
+  icon.className = `material-symbols-outlined ${isFav ? 'fill-icon text-red-400' : 'text-on-surface-variant'}`;
+  icon.style.fontSize = '20px';
+}
+
+function renderFavorites() {
+  const isCustomer = appState.role === 'customer';
+  document.getElementById('fav-title').textContent = isCustomer ? 'Избранные курьеры' : 'Избранные заказчики';
+  document.getElementById('fav-sub').textContent = isCustomer
+    ? 'Курьеры, которых вы добавили в избранное'
+    : 'Заказчики, которых вы добавили в избранное';
+  const favs = isCustomer
+    ? mockCouriers.filter(c => favCouriers.includes(c.id))
+    : [{ id:'cust1', name:'Алексей Гицба', city:'Сухум', rating:4.9, tasks:14, transport:'—', initials:'АГ', bio:'Постоянный заказчик' }];
+  document.getElementById('favorites-list').innerHTML = favs.map(c => courierCardHTML(c, false)).join('') || '<div class="text-center py-12"><span class="material-symbols-outlined text-on-surface-variant" style="font-size:3rem">favorite_border</span><p class="text-on-surface-variant text-sm mt-2">Нет избранных</p></div>';
+}
+
+function renderMessages() {
+  document.getElementById('chat-list').innerHTML = mockChats.map(ch => `
+    <div class="p-3 flex items-center gap-3 cursor-pointer hover:bg-surface-container-low transition-colors ${appState.activeChatId === ch.id ? 'bg-surface-container-low' : ''}" onclick="openChat('${ch.id}')">
+      <div class="avatar" style="width:40px;height:40px;">${ch.initials}</div>
+      <div class="flex-1 min-w-0">
+        <div class="flex justify-between">
+          <p class="font-bold text-sm">${ch.partner}</p>
+          <span class="text-xs text-on-surface-variant">${ch.time}</span>
+        </div>
+        <p class="text-xs text-on-surface-variant truncate">${ch.lastMsg}</p>
+      </div>
+    </div>`).join('');
+  if (appState.activeChatId) openChat(appState.activeChatId);
+}
+
+function openChat(id) {
+  appState.activeChatId = id;
+  const ch = mockChats.find(c => c.id === id);
+  if (!ch) return;
+  const task = mockTasks.find(t => t.id === ch.taskId);
+  document.getElementById('chat-avatar').innerHTML = `<span>${ch.initials}</span>`;
+  document.getElementById('chat-name').textContent = ch.partner;
+  document.getElementById('chat-task-name').textContent = task ? task.title : '';
+  document.getElementById('chat-messages').innerHTML = ch.messages.map(m =>
+    `<div class="${m.me ? 'chat-bubble-me' : 'chat-bubble-them'}">
+       <p class="text-sm">${m.text}</p>
+       <p class="text-xs opacity-60 mt-1 ${m.me ? 'text-right' : ''}">${m.time}</p>
+     </div>`
+  ).join('');
+  const msgs = document.getElementById('chat-messages');
+  msgs.scrollTop = msgs.scrollHeight;
+  renderMessages(); // refresh list highlight
+}
+
+function sendMsg() {
+  const input = document.getElementById('chat-input');
+  const text = input.value.trim();
+  if (!text || !appState.activeChatId) return;
+  const ch = mockChats.find(c => c.id === appState.activeChatId);
+  if (!ch) return;
+  const now = new Date();
+  const time = now.getHours() + ':' + String(now.getMinutes()).padStart(2,'0');
+  ch.messages.push({ me: true, text, time });
+  ch.lastMsg = text;
+  ch.time = time;
+  input.value = '';
+  openChat(appState.activeChatId);
+}
+
+function renderWallet() {
+  document.getElementById('wallet-balance').textContent = appState.balance;
+  document.getElementById('tx-list').innerHTML = mockTransactions.map(tx => `
+    <div class="flex items-center justify-between py-2 border-b" style="border-color:#f2f4f6;">
+      <div class="flex items-center gap-2">
+        <div style="width:32px;height:32px;border-radius:9999px;background:${tx.amount > 0 ? '#6cf8bb33' : '#ffdad6'};display:flex;align-items:center;justify-content:center;">
+          <span class="material-symbols-outlined text-sm" style="color:${tx.amount > 0 ? '#006c49' : '#ba1a1a'};font-size:.9rem">${tx.amount > 0 ? 'add' : 'remove'}</span>
+        </div>
+        <div>
+          <p class="text-sm font-semibold">${tx.desc}</p>
+          <p class="text-xs text-on-surface-variant">${tx.date}</p>
+        </div>
+      </div>
+      <span class="font-bold text-sm ${tx.amount > 0 ? 'text-secondary' : 'text-error'}">${tx.amount > 0 ? '+' : ''}${tx.amount} ₽</span>
+    </div>`).join('');
+}
+
+function renderCreate() {
+  document.getElementById('create-balance').textContent = appState.balance + ' ₽';
+  // Render fav couriers
+  const favs = mockCouriers.filter(c => favCouriers.includes(c.id));
+  document.getElementById('create-fav-couriers').innerHTML = favs.length
+    ? favs.map(c => `<button class="type-btn text-xs" style="padding:10px 12px;gap:6px;flex-direction:row;border-radius:9999px;">
+        <div class="avatar" style="width:24px;height:24px;font-size:.65rem;">${c.initials}</div>${c.name.split(' ')[0]}
+      </button>`).join('')
+    : '<p class="text-xs text-on-surface-variant">Нет избранных курьеров. Добавьте в разделе «Курьеры».</p>';
+}
+
+// ── TASK ACTIONS ────────────────────────────────────────
+function selectTaskType(type) {
+  appState.selectedTaskType = type;
+  document.querySelectorAll('.task-type-btn').forEach(b => {
+    b.classList.toggle('selected', b.dataset.type === type);
+  });
+}
+
+function submitTask() {
+  const title = document.getElementById('task-title').value.trim();
+  const reward = document.getElementById('task-reward').value;
+  const from = document.getElementById('task-from').value.trim();
+  const to = document.getElementById('task-to').value.trim();
+  if (!title || !reward || !from || !to) { showToast('Заполните все обязательные поля'); return; }
+  if (appState.balance < 100) { showToast('Недостаточно средств. Пополните кошелёк'); navigate('wallet'); return; }
+  appState.balance -= 100;
+  const newTask = {
+    id: 't' + Date.now(), type: appState.selectedTaskType, title,
+    from, to, reward: Number(reward),
+    deadline: document.getElementById('task-deadline').value || '—',
+    desc: document.getElementById('task-desc').value,
+    status: 'published', customer: appState.user.name + ' ' + (appState.user.surname||''),
+    courier: null, progress: 0,
+  };
+  mockTasks.unshift(newTask);
+  mockTransactions.unshift({ type:'task_fee', desc:'Комиссия: ' + title, amount:-100, date: new Date().toLocaleDateString('ru-RU') });
+  showToast('✅ Поручение опубликовано!');
+  // Reset form
+  document.getElementById('task-title').value = '';
+  document.getElementById('task-reward').value = '';
+  document.getElementById('task-from').value = '';
+  document.getElementById('task-to').value = '';
+  document.getElementById('task-desc').value = '';
+  navigate('active');
+}
+
+function completeTask(id) {
+  const t = mockTasks.find(x => x.id === id);
+  if (t) { t.status = 'completed'; t.progress = 100; }
+  showToast('Поручение отмечено выполненным');
+  openModal('modal-rating');
+}
+
+function courierComplete(id) {
+  showToast('Задание завершено! Ожидайте подтверждения заказчика.');
+  navigate('courier-dashboard');
+}
+
+// ── MODALS ──────────────────────────────────────────────
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+function openTaskModal(id) {
+  const t = mockTasks.find(x => x.id === id);
+  if (!t) return;
+  document.getElementById('modal-task-badge').innerHTML = taskTypeBadge(t.type);
+  document.getElementById('modal-task-title').textContent = t.title;
+  document.getElementById('modal-from').textContent = t.from;
+  document.getElementById('modal-to').textContent = t.to;
+  document.getElementById('modal-reward').textContent = t.reward + ' ₽';
+  document.getElementById('modal-deadline').textContent = t.deadline;
+  document.getElementById('modal-desc').textContent = t.desc || '—';
+  document.getElementById('modal-customer-name').textContent = t.customer;
+  document.getElementById('modal-customer-avatar').innerHTML = `<span>${t.customer[0]}</span>`;
+  let actions = '';
+  if (t.status === 'in_progress') {
+    actions = `<button onclick="navigate('messages');closeModal('modal-task')" class="btn-ghost flex-1">Чат</button>
+               <button onclick="completeTask('${t.id}');closeModal('modal-task')" class="btn-green flex-1">Подтвердить выполнение</button>`;
+  } else if (t.status === 'completed') {
+    actions = `<button onclick="closeModal('modal-task')" class="btn-primary flex-1">Закрыть</button>`;
+  } else {
+    actions = `<button onclick="closeModal('modal-task')" class="btn-ghost flex-1">Закрыть</button>`;
+  }
+  document.getElementById('modal-task-actions').innerHTML = actions;
+  openModal('modal-task');
+}
+
+function openTaskModalCourier(id) {
+  const t = mockTasks.find(x => x.id === id);
+  if (!t) return;
+  document.getElementById('modal-task-badge').innerHTML = taskTypeBadge(t.type);
+  document.getElementById('modal-task-title').textContent = t.title;
+  document.getElementById('modal-from').textContent = t.from;
+  document.getElementById('modal-to').textContent = t.to;
+  document.getElementById('modal-reward').textContent = t.reward + ' ₽';
+  document.getElementById('modal-deadline').textContent = t.deadline;
+  document.getElementById('modal-desc').textContent = t.desc || '—';
+  document.getElementById('modal-customer-name').textContent = t.customer;
+  document.getElementById('modal-customer-avatar').innerHTML = `<span>${t.customer[0]}</span>`;
+  document.getElementById('modal-task-actions').innerHTML =
+    `<button onclick="closeModal('modal-task')" class="btn-ghost flex-1">Закрыть</button>
+     <button onclick="acceptTask('${t.id}')" class="btn-green flex-1">Принять задание</button>`;
+  openModal('modal-task');
+}
+
+function acceptTask(id) {
+  const t = mockTasks.find(x => x.id === id);
+  if (t) { t.status = 'in_progress'; t.courier = appState.user.name + ' ' + (appState.user.surname||''); t.progress = 5; }
+  closeModal('modal-task');
+  showToast('Задание принято! Свяжитесь с заказчиком.');
+  navigate('courier-active');
+}
+
+// ── WALLET ──────────────────────────────────────────────
+function setAmount(n) { document.getElementById('top-up-amount').value = n; }
+function topUp() {
+  const amount = Number(document.getElementById('top-up-amount').value);
+  if (!amount || amount < 1) { showToast('Введите сумму'); return; }
+  appState.balance += amount;
+  mockTransactions.unshift({ type:'top_up', desc:'Пополнение через AnyPay', amount: +amount, date: new Date().toLocaleDateString('ru-RU') });
+  showToast(`✅ Счёт пополнен на ${amount} ₽`);
+  renderWallet();
+}
+
+// ── RATING ──────────────────────────────────────────────
+function setRating(n) {
+  appState.selectedRating = n;
+  document.querySelectorAll('#star-rating span').forEach((s,i) => s.classList.toggle('on', i < n));
+}
+function submitRating() {
+  showToast(`Оценка ${appState.selectedRating}★ отправлена`);
+  closeModal('modal-rating');
+}
+// Pre-select 5 stars
+setRating(5);
+
+// ── PROFILE ─────────────────────────────────────────────
+function saveProfile() {
+  if (appState.user) {
+    appState.user.name = document.getElementById('prof-name').value;
+    appState.user.surname = document.getElementById('prof-surname').value;
+    appState.user.city = document.getElementById('prof-city').value;
+    updateSidebarUser();
+  }
+  showToast('Профиль сохранён');
+}
+
+// ── FEEDBACK ────────────────────────────────────────────
+function sendFeedback() {
+  const name = document.getElementById('fb-name').value.trim();
+  const email = document.getElementById('fb-email').value.trim();
+  const msg = document.getElementById('fb-message').value.trim();
+  if (!name || !email || !msg) { showToast('Заполните все поля'); return; }
+  showToast('✅ Сообщение отправлено! Мы свяжемся с вами.');
+  document.getElementById('fb-name').value = '';
+  document.getElementById('fb-email').value = '';
+  document.getElementById('fb-message').value = '';
+}
+
+// ── TOAST ───────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ── CLOSE MODAL ON OVERLAY CLICK ───────────────────────
+document.querySelectorAll('.modal-overlay').forEach(el => {
+  el.addEventListener('click', e => { if (e.target === el) el.classList.remove('open'); });
+});
+
+// Demo quick login — type anything and press Enter
+document.getElementById('login-email').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doLogin();
+});
+document.getElementById('login-pass').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doLogin();
+});
+</script>
+</body>
+</html>
