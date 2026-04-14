@@ -57,6 +57,8 @@ CREATE TABLE public.profiles (
   city            TEXT NOT NULL DEFAULT 'Сухум',  -- Города Абхазии
   avatar_url      TEXT,
   bio             TEXT,
+  birth_date      DATE,                              -- Дата рождения
+  has_car         BOOLEAN NOT NULL DEFAULT FALSE,    -- Наличие автомобиля
   wallet_balance  NUMERIC(10, 2) NOT NULL DEFAULT 0.00 CHECK (wallet_balance >= 0),
   is_verified     BOOLEAN NOT NULL DEFAULT FALSE,
   is_active       BOOLEAN NOT NULL DEFAULT TRUE,
