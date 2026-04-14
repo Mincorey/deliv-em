@@ -344,6 +344,17 @@ body {
 }
 .type-btn:hover    { background: var(--surface-variant); }
 .type-btn.selected { background: var(--brand-soft); border-color: var(--brand); }
+/* Icon colour: dark navy in light mode, white in dark mode */
+.type-btn-icon { color: #00236f; }
+[data-theme="dark"] .type-btn-icon { color: #ffffff; }
+
+/* ── Number input — hide spin buttons ── */
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type=number] { appearance: textfield; -moz-appearance: textfield; }
 
 /* ── Chat bubbles ── */
 .chat-bubble-me {

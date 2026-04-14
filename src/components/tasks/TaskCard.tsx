@@ -25,27 +25,20 @@ export function TaskCard({ task, showCourier, showCustomer }: TaskCardProps) {
             {typeMeta.icon}
           </span>
           <div className="flex-1 min-w-0">
-            <p
-              className="font-bold text-sm truncate"
-              style={{ color: '#191c1e' }}
-            >
+            <p className="font-bold text-sm truncate" style={{ color: 'var(--text-1)' }}>
               {task.title}
             </p>
-            <div className="flex items-center gap-1 mt-0.5 text-xs" style={{ color: '#757682' }}>
-              <span className="material-symbols-outlined" style={{ fontSize: 12 }}>
-                location_on
-              </span>
-              <span className="truncate">
-                {task.from_address} → {task.to_address}
-              </span>
+            <div className="flex items-center gap-1 mt-0.5 text-xs" style={{ color: 'var(--text-3)' }}>
+              <span className="material-symbols-outlined" style={{ fontSize: 12 }}>location_on</span>
+              <span className="truncate">{task.from_address} → {task.to_address}</span>
             </div>
             {showCourier && task.courier && (
-              <p className="text-xs mt-1" style={{ color: '#757682' }}>
+              <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>
                 Курьер: {task.courier.full_name}
               </p>
             )}
             {showCustomer && task.customer && (
-              <p className="text-xs mt-1" style={{ color: '#757682' }}>
+              <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>
                 Заказчик: {task.customer.full_name}
               </p>
             )}
@@ -53,11 +46,11 @@ export function TaskCard({ task, showCourier, showCustomer }: TaskCardProps) {
         </div>
         <div className="flex flex-col items-end gap-1 flex-shrink-0">
           <Badge cls={statusMeta.cls}>{statusMeta.label}</Badge>
-          <span className="font-bold text-sm" style={{ color: '#006c49' }}>
+          <span className="font-bold text-sm" style={{ color: 'var(--green)' }}>
             {task.reward} ₽
           </span>
           {task.deadline && (
-            <span className="text-xs" style={{ color: '#757682' }}>
+            <span className="text-xs" style={{ color: 'var(--text-3)' }}>
               до {formatDate(task.deadline)}
             </span>
           )}
