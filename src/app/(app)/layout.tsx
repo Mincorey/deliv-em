@@ -67,7 +67,7 @@ export default async function AppLayout({
           notifications={(notifications ?? []) as Notification[]}
           unreadMessages={unreadMessages ?? 0}
         />
-        <main style={{ flex: 1, overflowY: 'auto', background: 'var(--bg)' }}>
+        <main className="map-bg" style={{ flex: 1, overflowY: 'auto', background: 'var(--bg)' }}>
           {children}
         </main>
       </div>

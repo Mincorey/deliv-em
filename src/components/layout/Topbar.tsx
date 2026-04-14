@@ -20,7 +20,7 @@ export function Topbar({ profile, notifications, unreadMessages }: TopbarProps) 
 
   return (
     <header
-      className="h-14 flex items-center justify-between px-5 flex-shrink-0"
+      className="h-[68px] flex items-center justify-between px-6 flex-shrink-0"
       style={{
         background: 'var(--glass-bg)',
         backdropFilter: 'blur(14px)',
@@ -32,40 +32,40 @@ export function Topbar({ profile, notifications, unreadMessages }: TopbarProps) 
     >
       {/* Search */}
       <div
-        className="flex items-center gap-2 flex-1 max-w-xs rounded-full px-4"
+        className="flex items-center gap-2 flex-1 max-w-sm rounded-full px-4"
         style={{
           background: 'var(--surface-alt)',
           border: '1.5px solid var(--border)',
-          height: 36,
+          height: 42,
         }}
       >
-        <span className="material-symbols-outlined" style={{ fontSize: 16, color: 'var(--text-3)' }}>
+        <span className="material-symbols-outlined" style={{ fontSize: 19, color: 'var(--text-3)' }}>
           search
         </span>
         <input
-          className="bg-transparent border-none outline-none text-sm flex-1"
+          className="bg-transparent border-none outline-none flex-1"
           placeholder="Поиск..."
           type="text"
-          style={{ color: 'var(--text-1)' }}
+          style={{ color: 'var(--text-1)', fontSize: '0.925rem' }}
         />
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-3">
         {/* Theme toggle */}
         <ThemeToggle />
 
         {/* Divider */}
-        <div style={{ width: 1, height: 20, background: 'var(--border)', margin: '0 4px' }} />
+        <div style={{ width: 1, height: 24, background: 'var(--border)', margin: '0 2px' }} />
 
         {/* Messages */}
         <Link
           href="/messages"
           className="relative flex items-center justify-center rounded-full transition-colors"
-          style={{ width: 32, height: 32, color: 'var(--text-3)' }}
+          style={{ width: 38, height: 38, color: 'var(--text-3)' }}
         >
           <span
             className={`material-symbols-outlined ${unreadMessages > 0 ? 'fill-icon' : ''}`}
-            style={{ fontSize: 20, color: unreadMessages > 0 ? 'var(--brand)' : 'var(--text-3)' }}
+            style={{ fontSize: 23, color: unreadMessages > 0 ? 'var(--brand)' : 'var(--text-3)' }}
           >
             chat_bubble
           </span>
@@ -91,11 +91,11 @@ export function Topbar({ profile, notifications, unreadMessages }: TopbarProps) 
           <button
             onClick={() => setNotifOpen(!notifOpen)}
             className="relative flex items-center justify-center rounded-full transition-colors"
-            style={{ width: 32, height: 32, background: 'transparent', border: 'none', cursor: 'pointer' }}
+            style={{ width: 38, height: 38, background: 'transparent', border: 'none', cursor: 'pointer' }}
           >
             <span
               className={`material-symbols-outlined ${unreadNotifs > 0 ? 'fill-icon' : ''}`}
-              style={{ fontSize: 20, color: unreadNotifs > 0 ? '#f59e0b' : 'var(--text-3)' }}
+              style={{ fontSize: 23, color: unreadNotifs > 0 ? '#f59e0b' : 'var(--text-3)' }}
             >
               notifications
             </span>
@@ -179,16 +179,16 @@ export function Topbar({ profile, notifications, unreadMessages }: TopbarProps) 
         </div>
 
         {/* Divider */}
-        <div style={{ width: 1, height: 20, background: 'var(--border)', margin: '0 4px' }} />
+        <div style={{ width: 1, height: 24, background: 'var(--border)', margin: '0 2px' }} />
 
         {/* Avatar + name */}
         <Link href="/profile" className="flex items-center gap-2 rounded-full px-2 py-1 transition-colors"
           style={{ textDecoration: 'none', background: 'transparent' }}
         >
-          <Avatar name={profile.full_name} avatarUrl={profile.avatar_url} size={30} />
+          <Avatar name={profile.full_name} avatarUrl={profile.avatar_url} size={34} />
           <span
-            className="text-sm font-semibold hidden sm:block"
-            style={{ color: 'var(--text-1)', maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+            className="font-semibold hidden sm:block"
+            style={{ color: 'var(--text-1)', maxWidth: 130, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '0.925rem' }}
           >
             {firstName}
           </span>

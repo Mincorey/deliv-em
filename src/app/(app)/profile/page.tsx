@@ -411,7 +411,8 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* Logout — no frame, just the button */}
+      {/* Logout — centered */}
+      <div style={{ display: 'flex', justifyContent: 'center' }}>
       <button
         onClick={handleLogout}
         style={{
@@ -436,6 +437,7 @@ export default function ProfilePage() {
         <span className="material-symbols-outlined" style={{ fontSize: 18 }}>logout</span>
         Выйти из аккаунта
       </button>
+      </div>
 
       {/* Camera overlay hover via CSS */}
       <style>{`
