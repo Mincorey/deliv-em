@@ -22,7 +22,7 @@ export default async function FavoritesPage() {
 
     return (
       <div className="p-6 max-w-4xl mx-auto">
-        <h2 className="text-xl font-bold mb-1" style={{ color: 'var(--text-1)' }}>Избранные курьеры</h2>
+        <h2 className="text-xl font-bold mb-1 page-header" style={{ color: 'var(--text-1)' }}>Избранные курьеры</h2>
         <p className="text-sm mb-5" style={{ color: 'var(--text-3)' }}>Курьеры, которых вы добавили в избранное</p>
         <FavoriteList people={couriers} role="courier" />
       </div>
@@ -55,11 +55,11 @@ function FavoriteList({
   if (people.length === 0) {
     return (
       <div className="text-center py-16">
-        <span className="material-symbols-outlined" style={{ fontSize: '4rem', color: 'var(--text-4)' }}>favorite</span>
-        <p className="font-bold mt-3" style={{ color: 'var(--text-3)' }}>
+        <span className="material-symbols-outlined icon-float" style={{ fontSize: '4rem', color: 'var(--text-3)' }}>favorite</span>
+        <p className="font-bold mt-3" style={{ color: 'var(--text-2)' }}>
           {role === 'courier' ? 'Нет избранных курьеров' : 'Нет избранных заказчиков'}
         </p>
-        <p className="text-sm mt-1" style={{ color: 'var(--text-4)' }}>
+        <p className="text-sm mt-1" style={{ color: 'var(--text-3)' }}>
           {role === 'courier'
             ? 'Добавляйте понравившихся курьеров в избранное в разделе «Курьеры»'
             : 'Избранные заказчики появятся здесь'}

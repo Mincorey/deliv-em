@@ -80,8 +80,8 @@ export default function AboutPage() {
         <div className="flex flex-col gap-3">
           {[
             { label: 'Версия', value: '1.0.0 Beta' },
-            { label: 'Год запуска', value: '2025' },
-            { label: 'Регион', value: 'Республика Абхазия' },
+            { label: 'Год запуска', value: '2026' },
+            { label: 'Страна', value: 'Республика Абхазия, г. Сухум' },
           ].map((row) => (
             <div key={row.label} className="flex justify-between text-sm" style={{ borderBottom: '1px solid var(--border)', paddingBottom: 8 }}>
               <span style={{ color: 'var(--text-3)' }}>{row.label}</span>

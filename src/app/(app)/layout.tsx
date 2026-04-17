@@ -2,8 +2,7 @@ export const dynamic = 'force-dynamic'
 
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { Sidebar } from '@/components/layout/Sidebar'
-import { Topbar } from '@/components/layout/Topbar'
+import { AppShell } from '@/components/layout/AppShell'
 import type { Profile, Notification } from '@/lib/types'
 
 export default async function AppLayout({
@@ -56,21 +55,12 @@ export default async function AppLayout({
     )
 
   return (
-    <div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
-      <Sidebar
-        profile={profile as Profile}
-        unreadMessages={unreadMessages ?? 0}
-      />
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, overflow: 'hidden' }}>
-        <Topbar
-          profile={profile as Profile}
-          notifications={(notifications ?? []) as Notification[]}
-          unreadMessages={unreadMessages ?? 0}
-        />
-        <main className="map-bg" style={{ flex: 1, overflowY: 'auto', background: 'var(--bg)' }}>
-          {children}
-        </main>
-      </div>
-    </div>
+    <AppShell
+      profile={profile as Profile}
+      notifications={(notifications ?? []) as Notification[]}
+      initialUnreadMessages={unreadMessages ?? 0}
+    >
+      {children}
+    </AppShell>
   )
 }

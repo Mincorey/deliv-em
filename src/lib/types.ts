@@ -15,6 +15,7 @@ export type TaskStatus =
   | 'published'
   | 'matched'
   | 'in_progress'
+  | 'awaiting_confirmation'
   | 'completed'
   | 'cancelled'
 
@@ -23,6 +24,12 @@ export type TransactionType = 'top_up' | 'task_fee' | 'payout' | 'refund'
 export type TransportType = 'foot' | 'bicycle' | 'motorcycle' | 'car' | 'truck'
 
 // ── Table Types ──────────────────────────────────────────────────────────────
+
+export interface PrivacySettings {
+  show_phone?:      boolean
+  show_bio?:        boolean
+  show_birth_date?: boolean
+}
 
 export interface Profile {
   id: string
@@ -39,6 +46,7 @@ export interface Profile {
   is_verified: boolean
   is_active: boolean
   push_token: string | null
+  privacy_settings: PrivacySettings | null
   created_at: string
   updated_at: string
 }
@@ -178,24 +186,28 @@ export const STATUS_META: Record<
   TaskStatus,
   { label: string; cls: string }
 > = {
-  draft: { label: 'Черновик', cls: 'badge-gray' },
-  published: { label: 'Свободен', cls: 'badge-green' },
-  matched: { label: 'Принят', cls: 'badge-orange' },
-  in_progress: { label: 'Выполняется', cls: 'badge-orange' },
-  completed: { label: 'Выполнено', cls: 'badge-blue' },
-  cancelled: { label: 'Отменено', cls: 'badge-red' },
+  draft:                  { label: 'Черновик',    cls: 'badge-gray'   },
+  published:              { label: 'Свободно',    cls: 'badge-green'  },
+  matched:                { label: 'Принято',     cls: 'badge-orange' },
+  in_progress:            { label: 'Выполняется', cls: 'badge-orange' },
+  awaiting_confirmation:  { label: 'На проверке', cls: 'badge-orange' },
+  completed:              { label: 'Выполнено',   cls: 'badge-blue'   },
+  cancelled:              { label: 'Отменено',    cls: 'badge-red'    },
 }
 
 export const TRANSPORT_META: Record<
   TransportType,
   { label: string; icon: string }
 > = {
-  foot: { label: 'Пешком', icon: 'directions_walk' },
-  bicycle: { label: 'Велосипед', icon: 'directions_bike' },
-  motorcycle: { label: 'Мотоцикл', icon: 'two_wheeler' },
-  car: { label: 'Автомобиль', icon: 'directions_car' },
-  truck: { label: 'Грузовик', icon: 'local_shipping' },
+  foot:       { label: 'Пешком',      icon: 'directions_walk' },
+  bicycle:    { label: 'Велосипед',   icon: 'directions_bike' },
+  motorcycle: { label: 'Мопед',       icon: 'two_wheeler' },
+  car:        { label: 'Автомобиль',  icon: 'directions_car' },
+  truck:      { label: 'Самокат',     icon: 'electric_scooter' },
 }
+
+/** The 4 vehicle options shown when courier activates «Есть транспорт» */
+export const VEHICLE_TRANSPORT_TYPES: TransportType[] = ['car', 'motorcycle', 'bicycle', 'truck']
 
 export const CITIES = [
   'Сухум',

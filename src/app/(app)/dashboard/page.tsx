@@ -34,9 +34,9 @@ async function CustomerDashboard({ profile, userId }: { profile: Profile; userId
     .from('tasks')
     .select(`*, customer:profiles!tasks_customer_id_fkey(*), courier:profiles!tasks_courier_id_fkey(*)`)
     .eq('customer_id', userId)
-    .in('status', ['published', 'matched', 'in_progress'])
+    .in('status', ['published', 'matched', 'in_progress', 'awaiting_confirmation'])
     .order('created_at', { ascending: false })
-    .limit(5)
+    .limit(10)
 
   const { data: recentTasks } = await supabase
     .from('tasks')
@@ -55,18 +55,52 @@ async function CustomerDashboard({ profile, userId }: { profile: Profile; userId
   const firstName = profile.full_name.split(' ')[0]
 
   return (
-    <div className="p-6 max-w-5xl mx-auto">
-      <div className="mb-6">
+    <div className="mobile-page-pad p-6 max-w-5xl mx-auto">
+      <div className="mb-6 page-header">
         <h2 style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--brand-text)', letterSpacing: '-0.02em' }}>
-          Добро пожаловать, {firstName} 👋
+          Добро пожаловать, {firstName}
         </h2>
         <p className="text-sm mt-1" style={{ color: 'var(--text-3)' }}>
           Вот что происходит с вашими поручениями
         </p>
       </div>
 
-      {/* Stats — 3 cards */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
+      {/* Awaiting confirmation banner */}
+      {activeTasks?.filter(t => t.status === 'awaiting_confirmation').map((task) => (
+        <Link key={task.id} href={`/tasks/${task.id}`} style={{ textDecoration: 'none', display: 'block', marginBottom: '1rem' }}>
+          <div style={{
+            background: 'linear-gradient(135deg, rgba(245,158,11,0.12), rgba(245,158,11,0.06))',
+            border: '1.5px solid rgba(245,158,11,0.4)',
+            borderRadius: '1rem',
+            padding: '1rem 1.25rem',
+            display: 'flex', alignItems: 'center', gap: 14,
+            cursor: 'pointer',
+            transition: 'border-color 0.15s',
+          }}>
+            <span className="material-symbols-outlined fill-icon flex-shrink-0" style={{ fontSize: 28, color: '#f59e0b' }}>
+              task_alt
+            </span>
+            <div className="flex-1 min-w-0">
+              <p style={{ fontWeight: 800, fontSize: '0.9rem', color: 'var(--text-1)' }}>
+                Требует вашего подтверждения
+              </p>
+              <p className="truncate" style={{ fontSize: '0.8rem', color: 'var(--text-3)', marginTop: 2 }}>
+                {(task as unknown as TaskWithProfiles).title}
+              </p>
+            </div>
+            <div style={{
+              background: '#f59e0b', color: '#fff',
+              borderRadius: '0.6rem', padding: '6px 14px',
+              fontSize: '0.8rem', fontWeight: 700, whiteSpace: 'nowrap', flexShrink: 0,
+            }}>
+              Подтвердить →
+            </div>
+          </div>
+        </Link>
+      ))}
+
+      {/* Stats — 1 col mobile / 3 col desktop */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
         {/* Balance */}
         <div className="stat-card card-enter">
           <p className="label-sm">Баланс кошелька</p>
@@ -122,7 +156,7 @@ async function CustomerDashboard({ profile, userId }: { profile: Profile; userId
           <div className="flex flex-col gap-3">
             {activeTasks!.map((task) => (
               <div key={task.id} className="card-enter">
-                <TaskCard task={task as unknown as TaskWithProfiles} showCourier />
+                <TaskCard task={task as unknown as TaskWithProfiles} showCourier currentUserId={userId} />
               </div>
             ))}
           </div>
@@ -151,11 +185,11 @@ async function CustomerDashboard({ profile, userId }: { profile: Profile; userId
       {/* Empty state */}
       {(activeTasks?.length ?? 0) === 0 && (recentTasks?.length ?? 0) === 0 && (
         <div className="text-center py-16">
-          <span className="material-symbols-outlined" style={{ fontSize: '4rem', color: 'var(--text-4)' }}>
+          <span className="material-symbols-outlined icon-float" style={{ fontSize: '4rem', color: 'var(--text-3)' }}>
             task_alt
           </span>
-          <p className="font-bold mt-3" style={{ color: 'var(--text-3)' }}>Пока нет поручений</p>
-          <p className="text-sm mt-1 mb-5" style={{ color: 'var(--text-4)' }}>
+          <p className="font-bold mt-3" style={{ color: 'var(--text-2)' }}>Пока нет поручений</p>
+          <p className="text-sm mt-1 mb-5" style={{ color: 'var(--text-3)' }}>
             Создайте первое — курьеры уже готовы помочь
           </p>
           <Link href="/tasks/create">
@@ -200,9 +234,9 @@ async function CourierDashboard({ profile, userId }: { profile: Profile; userId:
 
   return (
     <div className="p-6 max-w-5xl mx-auto">
-      <div className="mb-6">
+      <div className="mb-6 page-header">
         <h2 style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--brand-text)', letterSpacing: '-0.02em' }}>
-          Привет, {firstName} 👋
+          Привет, {firstName}
         </h2>
         <p className="text-sm mt-1" style={{ color: 'var(--text-3)' }}>
           Ваша статистика и новые задания
@@ -242,10 +276,9 @@ async function CourierDashboard({ profile, userId }: { profile: Profile; userId:
         <div className="stat-card card-enter">
           <p className="label-sm">Статус</p>
           <div className="flex items-center gap-2 mt-3">
-            <div style={{
+            <div className={cp?.is_available ? 'pulse-dot' : ''} style={{
               width: 10, height: 10, borderRadius: 9999,
               background: cp?.is_available ? 'var(--green)' : 'var(--text-4)',
-              boxShadow: cp?.is_available ? '0 0 0 3px var(--green-soft)' : 'none',
             }} />
             <span className="font-bold text-sm" style={{ color: cp?.is_available ? 'var(--green)' : 'var(--text-3)' }}>
               {cp?.is_available ? 'Онлайн' : 'Оффлайн'}
@@ -271,9 +304,9 @@ async function CourierDashboard({ profile, userId }: { profile: Profile; userId:
         </div>
       ) : (
         <div className="text-center py-12">
-          <span className="material-symbols-outlined" style={{ fontSize: '3rem', color: 'var(--text-4)' }}>search</span>
-          <p className="font-bold mt-3" style={{ color: 'var(--text-3)' }}>Новых заданий нет</p>
-          <p className="text-sm mt-1" style={{ color: 'var(--text-4)' }}>Проверьте позже</p>
+          <span className="material-symbols-outlined icon-float" style={{ fontSize: '3rem', color: 'var(--text-3)' }}>search</span>
+          <p className="font-bold mt-3" style={{ color: 'var(--text-2)' }}>Новых заданий нет</p>
+          <p className="text-sm mt-1" style={{ color: 'var(--text-3)' }}>Проверьте позже</p>
         </div>
       )}
     </div>

@@ -29,18 +29,13 @@ export function ThemeToggle() {
     <button
       onClick={toggle}
       title={dark ? 'Светлая тема' : 'Тёмная тема'}
+      className="btn-icon"
       style={{
         width: 32,
         height: 32,
-        borderRadius: 9999,
         border: '1.5px solid var(--border)',
         background: 'var(--surface-alt)',
         color: 'var(--text-3)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        cursor: 'pointer',
-        transition: 'background 0.18s, color 0.18s, border-color 0.18s',
         flexShrink: 0,
       }}
     >

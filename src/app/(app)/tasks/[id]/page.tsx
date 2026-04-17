@@ -6,9 +6,9 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { Avatar } from '@/components/ui/Avatar'
 import { Badge } from '@/components/ui/Badge'
-import { RatingModal } from '@/components/tasks/RatingModal'
+import { RatingBlock } from '@/components/tasks/RatingBlock'
 import { useToast } from '@/components/ui/Toast'
-import { acceptTask, startTask, completeTask, cancelTask } from '../actions'
+import { acceptTask, startTask, completeTask, confirmTask, rejectCompletion, cancelTask } from '../actions'
 import { TASK_TYPE_META, STATUS_META, type TaskWithProfiles, type Profile } from '@/lib/types'
 import { formatDate } from '@/lib/utils'
 
@@ -21,7 +21,7 @@ export default function TaskDetailPage() {
   const [task, setTask]               = useState<TaskWithProfiles | null>(null)
   const [currentUser, setCurrentUser] = useState<Profile | null>(null)
   const [loading, setLoading]         = useState(true)
-  const [ratingOpen, setRatingOpen]   = useState(false)
+  const [myRating, setMyRating]       = useState<number | null>(null)
 
   useEffect(() => {
     async function load() {
@@ -35,6 +35,18 @@ export default function TaskDetailPage() {
         .eq('id', params.id as string)
         .single()
       setTask(taskData as unknown as TaskWithProfiles)
+
+      // Load my existing rating for this task
+      if (user) {
+        const { data: existingRating } = await supabase
+          .from('ratings')
+          .select('score')
+          .eq('task_id', params.id as string)
+          .eq('from_user_id', user.id)
+          .maybeSingle()
+        if (existingRating) setMyRating(existingRating.score)
+      }
+
       setLoading(false)
     }
     load()
@@ -80,8 +92,6 @@ export default function TaskDetailPage() {
     padding: '1.25rem',
   }
 
-  const ratingTarget = isCustomer ? task.courier : task.customer
-
   return (
     <div className="p-6 max-w-3xl mx-auto">
       <div className="flex items-center gap-3 mb-6">
@@ -89,6 +99,17 @@ export default function TaskDetailPage() {
           <span className="material-symbols-outlined">arrow_back</span>
         </Link>
         <h2 className="text-xl font-bold flex-1" style={{ color: 'var(--text-1)' }}>Детали поручения</h2>
+        {isCustomer && task.status === 'published' && (
+          <Link href={`/tasks/${task.id}/edit`} style={{ textDecoration: 'none' }}>
+            <button
+              className="btn-ghost"
+              style={{ padding: '6px 12px', display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.8rem' }}
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: 18 }}>edit</span>
+              Изменить
+            </button>
+          </Link>
+        )}
         <Badge cls={statusMeta.cls}>{statusMeta.label}</Badge>
       </div>
 
@@ -108,16 +129,16 @@ export default function TaskDetailPage() {
           </div>
 
           {/* Route */}
-          <div className="rounded-xl p-4" style={{ background: 'var(--surface-alt)', border: '1.5px solid var(--border)' }}>
-            <div className="flex justify-between text-sm">
-              <div>
+          <div className="rounded-xl" style={{ background: 'var(--surface-alt)', border: '1.5px solid var(--border)', padding: '1rem 1.25rem' }}>
+            <div className="flex items-center gap-4 text-sm">
+              <div style={{ flex: 1 }}>
                 <p className="label-sm">Откуда</p>
-                <p className="font-semibold" style={{ color: 'var(--text-1)' }}>{task.from_address}</p>
+                <p className="font-semibold" style={{ color: 'var(--text-1)', wordBreak: 'break-word' }}>{task.from_address}</p>
               </div>
-              <span className="material-symbols-outlined" style={{ color: 'var(--green)' }}>arrow_forward</span>
-              <div className="text-right">
+              <span className="material-symbols-outlined flex-shrink-0" style={{ color: 'var(--green)' }}>arrow_forward</span>
+              <div style={{ flex: 1, textAlign: 'right' }}>
                 <p className="label-sm">Куда</p>
-                <p className="font-semibold" style={{ color: 'var(--text-1)' }}>{task.to_address}</p>
+                <p className="font-semibold" style={{ color: 'var(--text-1)', wordBreak: 'break-word' }}>{task.to_address}</p>
               </div>
             </div>
           </div>
@@ -139,26 +160,51 @@ export default function TaskDetailPage() {
         )}
 
         {/* Participants */}
-        <div style={{ ...card, display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-          <div className="flex items-center gap-3">
-            <Avatar name={task.customer.full_name} avatarUrl={task.customer.avatar_url} />
-            <div>
-              <p className="label-sm">Заказчик</p>
-              <p className="font-bold text-sm" style={{ color: 'var(--text-1)' }}>{task.customer.full_name}</p>
-              <p className="text-xs" style={{ color: 'var(--text-3)' }}>{task.customer.city}</p>
-            </div>
+        {(task.customer || task.courier) && (
+          <div style={{ ...card, display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            {task.customer && (
+              <Link href={`/profile/${task.customer.id}`} style={{ textDecoration: 'none' }}>
+                <div className="flex items-center gap-3" style={{
+                  padding: '0.5rem', borderRadius: '0.75rem', margin: '-0.5rem',
+                  transition: 'background 0.15s', cursor: 'pointer',
+                }}
+                  onMouseEnter={e => (e.currentTarget.style.background = 'var(--surface-variant)')}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                >
+                  <Avatar name={task.customer.full_name} avatarUrl={task.customer.avatar_url} />
+                  <div className="flex-1">
+                    <p className="label-sm">Заказчик</p>
+                    <p className="font-bold text-sm" style={{ color: 'var(--text-1)' }}>{task.customer.full_name}</p>
+                    <p className="text-xs" style={{ color: 'var(--text-3)' }}>{task.customer.city}</p>
+                  </div>
+                  <span className="material-symbols-outlined" style={{ fontSize: 18, color: 'var(--text-4)' }}>chevron_right</span>
+                </div>
+              </Link>
+            )}
+            {task.courier && (
+              <Link href={`/profile/${task.courier.id}`} style={{ textDecoration: 'none' }}>
+                <div className="flex items-center gap-3" style={{
+                  borderTop: task.customer ? '1px solid var(--border)' : 'none',
+                  paddingTop: task.customer ? '0.75rem' : 0,
+                  padding: '0.5rem', borderRadius: '0.75rem', margin: '-0.5rem',
+                  marginTop: task.customer ? 'calc(0.75rem - 0.5rem)' : '-0.5rem',
+                  transition: 'background 0.15s', cursor: 'pointer',
+                }}
+                  onMouseEnter={e => (e.currentTarget.style.background = 'var(--surface-variant)')}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                >
+                  <Avatar name={task.courier.full_name} avatarUrl={task.courier.avatar_url} />
+                  <div className="flex-1">
+                    <p className="label-sm">Курьер</p>
+                    <p className="font-bold text-sm" style={{ color: 'var(--text-1)' }}>{task.courier.full_name}</p>
+                    <p className="text-xs" style={{ color: 'var(--text-3)' }}>{task.courier.city}</p>
+                  </div>
+                  <span className="material-symbols-outlined" style={{ fontSize: 18, color: 'var(--text-4)' }}>chevron_right</span>
+                </div>
+              </Link>
+            )}
           </div>
-          {task.courier && (
-            <div className="flex items-center gap-3" style={{ borderTop: '1px solid var(--border)', paddingTop: '0.75rem' }}>
-              <Avatar name={task.courier.full_name} avatarUrl={task.courier.avatar_url} />
-              <div>
-                <p className="label-sm">Курьер</p>
-                <p className="font-bold text-sm" style={{ color: 'var(--text-1)' }}>{task.courier.full_name}</p>
-                <p className="text-xs" style={{ color: 'var(--text-3)' }}>{task.courier.city}</p>
-              </div>
-            </div>
-          )}
-        </div>
+        )}
 
         {/* Progress */}
         {task.status === 'in_progress' && (
@@ -175,13 +221,16 @@ export default function TaskDetailPage() {
 
         {/* Actions */}
         <div className="flex flex-col gap-3">
+          {/* Courier: accept published task */}
           {!isCustomer && task.status === 'published' && (
             <button className="btn-green w-full" style={{ justifyContent: 'center', padding: '14px' }}
               onClick={() => handle(() => acceptTask(task.id))}>
               <span className="material-symbols-outlined text-base">check_circle</span>
-              Принять задание
+              Принять поручение
             </button>
           )}
+
+          {/* Courier: start matched task */}
           {isCourier && task.status === 'matched' && (
             <button className="btn-primary w-full" style={{ justifyContent: 'center', padding: '14px' }}
               onClick={() => handle(() => startTask(task.id))}>
@@ -189,6 +238,8 @@ export default function TaskDetailPage() {
               Начать выполнение
             </button>
           )}
+
+          {/* Courier: mark done → awaiting confirmation */}
           {isCourier && task.status === 'in_progress' && (
             <button className="btn-green w-full" style={{ justifyContent: 'center', padding: '14px' }}
               onClick={() => handle(() => completeTask(task.id))}>
@@ -196,6 +247,48 @@ export default function TaskDetailPage() {
               Отметить как выполненное
             </button>
           )}
+
+          {/* Courier: waiting banner */}
+          {isCourier && task.status === 'awaiting_confirmation' && (
+            <div style={{
+              background: 'var(--surface-variant)', border: '1.5px solid var(--border)',
+              borderRadius: '1rem', padding: '14px', textAlign: 'center',
+              color: 'var(--text-3)', fontSize: '0.875rem', fontWeight: 600,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+            }}>
+              <span className="material-symbols-outlined" style={{ fontSize: 18 }}>hourglass_empty</span>
+              Ожидаем подтверждения заказчика
+            </div>
+          )}
+
+          {/* Customer: confirm or reject */}
+          {isCustomer && task.status === 'awaiting_confirmation' && (
+            <>
+              <div style={{
+                background: 'rgba(45,212,160,0.08)', border: '1.5px solid rgba(45,212,160,0.3)',
+                borderRadius: '1rem', padding: '12px 16px',
+                color: 'var(--text-2)', fontSize: '0.875rem', lineHeight: 1.5,
+                display: 'flex', alignItems: 'flex-start', gap: 10,
+              }}>
+                <span className="material-symbols-outlined" style={{ fontSize: 20, color: '#2dd4a0', flexShrink: 0, marginTop: 1 }}>info</span>
+                Курьер отметил поручение как выполненное. Проверьте и подтвердите или отклоните.
+              </div>
+              <div className="flex gap-3">
+                <button className="btn-ghost flex-1" style={{ justifyContent: 'center', padding: '14px', color: '#ba1a1a' }}
+                  onClick={() => handle(() => rejectCompletion(task.id))}>
+                  <span className="material-symbols-outlined text-base">cancel</span>
+                  Отклонить
+                </button>
+                <button className="btn-green flex-1" style={{ justifyContent: 'center', padding: '14px' }}
+                  onClick={() => handle(() => confirmTask(task.id))}>
+                  <span className="material-symbols-outlined text-base">verified</span>
+                  Подтвердить
+                </button>
+              </div>
+            </>
+          )}
+
+          {/* Customer: cancel while open */}
           {isCustomer && ['published', 'matched'].includes(task.status) && (
             <button className="btn-ghost w-full" style={{ color: '#ba1a1a', justifyContent: 'center', padding: '14px' }}
               onClick={() => handle(() => cancelTask(task.id))}>
@@ -203,13 +296,8 @@ export default function TaskDetailPage() {
               Отменить поручение
             </button>
           )}
-          {task.status === 'completed' && ratingTarget && (
-            <button className="btn-primary w-full" style={{ justifyContent: 'center', padding: '14px' }}
-              onClick={() => setRatingOpen(true)}>
-              <span className="material-symbols-outlined fill-icon text-base">star</span>
-              Оставить оценку
-            </button>
-          )}
+
+          {/* Chat */}
           {task.courier_id && (
             <Link href={`/messages/${task.id}`}>
               <button className="btn-ghost w-full" style={{ justifyContent: 'center', padding: '14px' }}>
@@ -219,17 +307,25 @@ export default function TaskDetailPage() {
             </Link>
           )}
         </div>
-      </div>
 
-      {ratingTarget && (
-        <RatingModal
-          open={ratingOpen}
-          onClose={() => setRatingOpen(false)}
-          taskId={task.id}
-          toUserId={ratingTarget.id}
-          toUserName={ratingTarget.full_name}
-        />
-      )}
+        {/* Inline rating block — shown after completion */}
+        {task.status === 'completed' && isCustomer && task.courier && (
+          <RatingBlock
+            taskId={task.id}
+            target={task.courier}
+            roleLabel="Курьер"
+            existingScore={myRating}
+          />
+        )}
+        {task.status === 'completed' && isCourier && task.customer && (
+          <RatingBlock
+            taskId={task.id}
+            target={task.customer}
+            roleLabel="Заказчик"
+            existingScore={myRating}
+          />
+        )}
+      </div>
     </div>
   )
 }

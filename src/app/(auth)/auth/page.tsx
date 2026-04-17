@@ -1,11 +1,11 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { createClient } from '@/lib/supabase/client'
 import { useToast } from '@/components/ui/Toast'
 import { ThemeToggle } from '@/components/layout/ThemeToggle'
 import { CITIES } from '@/lib/types'
 import type { UserRole, TransportType } from '@/lib/types'
+import { loginAction, registerAction } from './actions'
 
 type Tab = 'login' | 'register'
 
@@ -98,10 +98,10 @@ function CitySelect({ value, onChange }: { value: string; onChange: (v: string) 
 /* ── Main page ── */
 export default function AuthPage() {
   const toast = useToast()
-  const supabase = createClient()
 
   const [tab, setTab] = useState<Tab>('login')
   const [loading, setLoading] = useState(false)
+  const [formError, setFormError] = useState('')
 
   // Login state
   const [loginEmail, setLoginEmail] = useState('')
@@ -120,15 +120,14 @@ export default function AuthPage() {
   const [showRegPass, setShowRegPass] = useState(false)
 
   async function handleLogin() {
-    if (!loginEmail.trim()) { toast.show('Введите email', 'error'); return }
+    if (!loginEmail.trim()) { setFormError('Введите email'); return }
+    setFormError('')
     setLoading(true)
-    const { error } = await supabase.auth.signInWithPassword({
-      email: loginEmail.trim(),
-      password: loginPass,
-    })
+    const result = await loginAction(loginEmail.trim(), loginPass)
     setLoading(false)
-    if (error) {
-      toast.show('Неверный email или пароль', 'error')
+    if (result.error) {
+      setFormError(result.error)
+      toast.show(result.error, 'error')
     } else {
       window.location.href = '/dashboard'
     }
@@ -136,40 +135,29 @@ export default function AuthPage() {
 
   async function handleRegister() {
     if (!firstName || !phone || !regEmail || !regPass) {
-      toast.show('Заполните все обязательные поля', 'error'); return
+      setFormError('Заполните все обязательные поля'); return
     }
-    if (regPass.length < 8) { toast.show('Пароль минимум 8 символов', 'error'); return }
+    if (regPass.length < 8) { setFormError('Пароль минимум 8 символов'); return }
+    setFormError('')
     setLoading(true)
 
-    const fullName = `${firstName} ${lastName}`.trim()
-
-    const { data, error } = await supabase.auth.signUp({
-      email: regEmail.trim(),
-      password: regPass,
-      options: {
-        data: { full_name: fullName, phone, city, role, transport_type: role === 'courier' ? transport : undefined },
-      },
+    const result = await registerAction({
+      email:         regEmail.trim(),
+      password:      regPass,
+      fullName:      `${firstName} ${lastName}`.trim(),
+      phone,
+      city,
+      role,
+      transportType: role === 'courier' ? transport : undefined,
     })
 
-    if (error) { setLoading(false); toast.show(error.message, 'error'); return }
-
-    if (data.user) {
-      const { error: profErr } = await supabase.from('profiles').insert({
-        id: data.user.id, role, full_name: fullName, phone, email: regEmail.trim(), city,
-      })
-      if (profErr) {
-        setLoading(false)
-        toast.show('Аккаунт создан, но профиль не сохранился: ' + profErr.message, 'error')
-        return
-      }
-      if (role === 'courier') {
-        await supabase.from('courier_profiles').insert({ id: data.user.id, transport_type: transport })
-      }
-    }
-
     setLoading(false)
-    toast.show('Аккаунт создан! Добро пожаловать!', 'success')
-    window.location.href = '/dashboard'
+    if (result.error) {
+      setFormError(result.error)
+      toast.show(result.error, 'error')
+    } else {
+      window.location.href = '/dashboard'
+    }
   }
 
   const TRANSPORT_OPTIONS: { value: TransportType; icon: string; label: string }[] = [
@@ -272,6 +260,17 @@ export default function AuthPage() {
                   </button>
                 </div>
               </div>
+              {formError && (
+                <div style={{
+                  background: 'rgba(186,26,26,0.08)', border: '1.5px solid rgba(186,26,26,0.3)',
+                  borderRadius: '0.75rem', padding: '10px 14px',
+                  color: '#ba1a1a', fontSize: '0.85rem', fontWeight: 600,
+                  display: 'flex', alignItems: 'center', gap: 8,
+                }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: 18, flexShrink: 0 }}>error</span>
+                  {formError}
+                </div>
+              )}
               <button
                 className="btn-primary w-full mt-2"
                 style={{ fontSize: '0.95rem', padding: '14px', justifyContent: 'center' }}
@@ -384,6 +383,17 @@ export default function AuthPage() {
                 </div>
               )}
 
+              {formError && (
+                <div style={{
+                  background: 'rgba(186,26,26,0.08)', border: '1.5px solid rgba(186,26,26,0.3)',
+                  borderRadius: '0.75rem', padding: '10px 14px',
+                  color: '#ba1a1a', fontSize: '0.85rem', fontWeight: 600,
+                  display: 'flex', alignItems: 'center', gap: 8,
+                }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: 18, flexShrink: 0 }}>error</span>
+                  {formError}
+                </div>
+              )}
               <button
                 className="btn-primary w-full mt-1"
                 style={{ fontSize: '0.95rem', padding: '14px', justifyContent: 'center' }}

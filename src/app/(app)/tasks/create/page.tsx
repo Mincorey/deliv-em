@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createTask } from '../actions'
 import { useToast } from '@/components/ui/Toast'
+import { AddressMapPicker } from '@/components/ui/AddressMapPicker'
 import { TASK_TYPE_META } from '@/lib/types'
 import type { TaskType } from '@/lib/types'
 import DateTimePicker from '@/components/ui/DateTimePicker'
@@ -12,21 +13,21 @@ const TASK_TYPES = Object.entries(TASK_TYPE_META) as [TaskType, (typeof TASK_TYP
 
 export default function CreateTaskPage() {
   const router = useRouter()
-  const toast = useToast()
+  const toast  = useToast()
 
-  const [taskType, setTaskType]       = useState<TaskType>('documents')
-  const [title, setTitle]             = useState('')
-  const [description, setDescription] = useState('')
-  const [reward, setReward]           = useState('')
-  const [fromAddress, setFromAddress] = useState('')
-  const [toAddress, setToAddress]     = useState('')
-  const [deadline, setDeadline]       = useState('')
-  const [loading, setLoading]         = useState(false)
+  const [taskType,     setTaskType]     = useState<TaskType>('documents')
+  const [title,        setTitle]        = useState('')
+  const [description,  setDescription]  = useState('')
+  const [reward,       setReward]       = useState('')
+  const [fromAddress,  setFromAddress]  = useState('')
+  const [toAddress,    setToAddress]    = useState('')
+  const [deadline,     setDeadline]     = useState('')
+  const [loading,      setLoading]      = useState(false)
 
   async function handleSubmit() {
-    if (!title.trim()) { toast.show('Введите название поручения', 'error'); return }
+    if (!title.trim())                          { toast.show('Введите название поручения', 'error');    return }
     if (!fromAddress.trim() || !toAddress.trim()) { toast.show('Укажите адреса откуда и куда', 'error'); return }
-    if (!reward || Number(reward) <= 0) { toast.show('Укажите вознаграждение курьеру', 'error'); return }
+    if (!reward || Number(reward) <= 0)         { toast.show('Укажите вознаграждение курьеру', 'error'); return }
     setLoading(true)
     const res = await createTask({
       title: title.trim(), description: description.trim(), task_type: taskType,
@@ -48,20 +49,9 @@ export default function CreateTaskPage() {
     padding: '1.25rem',
   }
 
-  const mapPlaceholder: React.CSSProperties = {
-    height: 140,
-    borderRadius: '0.875rem',
-    background: 'var(--surface-alt)',
-    border: '1.5px solid var(--border)',
-    marginTop: '0.75rem',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-  }
-
   return (
     <div className="p-6 max-w-3xl mx-auto">
-      <h2 className="text-xl font-bold mb-1" style={{ color: 'var(--text-1)' }}>Новое поручение</h2>
+      <h2 className="text-xl font-bold mb-1 page-header" style={{ color: 'var(--text-1)' }}>Новое поручение</h2>
       <p className="text-sm mb-6" style={{ color: 'var(--text-3)' }}>Заполните данные — курьеры увидят ваше задание</p>
 
       <div className="flex flex-col gap-5">
@@ -79,82 +69,38 @@ export default function CreateTaskPage() {
           </div>
         </div>
 
-        {/* Main fields */}
+        {/* Title + reward */}
         <div style={{ ...card, display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           <div>
             <label className="label-sm">Название поручения</label>
-            <input className="input-field" placeholder="Например: передать документы в офис" value={title} onChange={(e) => setTitle(e.target.value)} />
+            <input
+              className="input-field"
+              placeholder="Например: передать документы в офис"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+            />
           </div>
           <div>
             <label className="label-sm">Вознаграждение курьеру (₽)</label>
-            <input className="input-field" type="text" inputMode="numeric" pattern="[0-9]*" placeholder="Сколько заработает курьер" value={reward} onChange={(e) => setReward(e.target.value.replace(/[^0-9]/g, ''))} />
+            <input
+              className="input-field"
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              placeholder="Сколько заработает курьер"
+              value={reward}
+              onChange={(e) => setReward(e.target.value.replace(/[^0-9]/g, ''))}
+            />
           </div>
         </div>
 
-        {/* FROM address */}
-        <div style={card}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-            <label className="label-sm" style={{ color: '#e04040', marginBottom: 0 }}>📍 Откуда забрать</label>
-            <div className="glass rounded-full px-3 py-1 text-xs font-bold flex items-center gap-1" style={{ color: 'var(--text-2)' }}>
-              <span style={{ width: 6, height: 6, borderRadius: 9999, background: 'var(--green)', display: 'inline-block' }} />
-              GPS активен
-            </div>
-          </div>
-          <input
-            className="input-field"
-            placeholder="Адрес, ориентир или место в Абхазии"
-            value={fromAddress}
-            onChange={(e) => setFromAddress(e.target.value)}
-          />
-          <div style={mapPlaceholder}>
-            {fromAddress ? (
-              <div style={{ textAlign: 'center', padding: '0 1rem' }}>
-                <span className="material-symbols-outlined fill-icon" style={{ fontSize: '2rem', color: '#e04040' }}>location_on</span>
-                <p style={{ fontSize: '0.8rem', color: 'var(--text-1)', fontWeight: 600, marginTop: 4, wordBreak: 'break-word' }}>{fromAddress}</p>
-                <p style={{ fontSize: '0.7rem', color: 'var(--text-3)', marginTop: 2 }}>Яндекс Карты подключатся при деплое</p>
-              </div>
-            ) : (
-              <div style={{ textAlign: 'center', padding: '0 1rem' }}>
-                <span className="material-symbols-outlined" style={{ fontSize: '2rem', color: 'var(--text-4)' }}>touch_app</span>
-                <p style={{ fontSize: '0.8rem', color: 'var(--text-3)', fontWeight: 500, marginTop: 4 }}>Введите адрес или нажмите на карту</p>
-                <p style={{ fontSize: '0.7rem', color: 'var(--text-4)', marginTop: 2 }}>Яндекс Карты подключатся при деплое</p>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Arrow separator */}
-        <div className="flex items-center gap-2" style={{ marginTop: '-0.5rem', marginBottom: '-0.5rem' }}>
-          <div className="flex-1 h-px" style={{ background: 'var(--border)' }} />
-          <span className="material-symbols-outlined" style={{ color: 'var(--green)', fontSize: '1.4rem' }}>arrow_downward</span>
-          <div className="flex-1 h-px" style={{ background: 'var(--border)' }} />
-        </div>
-
-        {/* TO address */}
-        <div style={card}>
-          <label className="label-sm" style={{ color: 'var(--green)', display: 'block', marginBottom: '0.75rem' }}>🏁 Куда доставить</label>
-          <input
-            className="input-field"
-            placeholder="Адрес получателя"
-            value={toAddress}
-            onChange={(e) => setToAddress(e.target.value)}
-          />
-          <div style={mapPlaceholder}>
-            {toAddress ? (
-              <div style={{ textAlign: 'center', padding: '0 1rem' }}>
-                <span className="material-symbols-outlined fill-icon" style={{ fontSize: '2rem', color: 'var(--green)' }}>flag</span>
-                <p style={{ fontSize: '0.8rem', color: 'var(--text-1)', fontWeight: 600, marginTop: 4, wordBreak: 'break-word' }}>{toAddress}</p>
-                <p style={{ fontSize: '0.7rem', color: 'var(--text-3)', marginTop: 2 }}>Яндекс Карты подключатся при деплое</p>
-              </div>
-            ) : (
-              <div style={{ textAlign: 'center', padding: '0 1rem' }}>
-                <span className="material-symbols-outlined" style={{ fontSize: '2rem', color: 'var(--text-4)' }}>touch_app</span>
-                <p style={{ fontSize: '0.8rem', color: 'var(--text-3)', fontWeight: 500, marginTop: 4 }}>Введите адрес или нажмите на карту</p>
-                <p style={{ fontSize: '0.7rem', color: 'var(--text-4)', marginTop: 2 }}>Яндекс Карты подключатся при деплое</p>
-              </div>
-            )}
-          </div>
-        </div>
+        {/* ── Map with address pickers ── */}
+        <AddressMapPicker
+          fromAddress={fromAddress}
+          toAddress={toAddress}
+          onFromChange={setFromAddress}
+          onToChange={setToAddress}
+        />
 
         {/* Deadline + description */}
         <div style={{ ...card, display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -164,7 +110,13 @@ export default function CreateTaskPage() {
           </div>
           <div>
             <label className="label-sm">Описание и особые пожелания</label>
-            <textarea className="textarea-field" rows={4} placeholder="Особые инструкции для курьера..." value={description} onChange={(e) => setDescription(e.target.value)} />
+            <textarea
+              className="textarea-field"
+              rows={4}
+              placeholder="Особые инструкции для курьера..."
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
           </div>
         </div>
 
@@ -180,7 +132,12 @@ export default function CreateTaskPage() {
               <span className="text-white font-bold text-lg mb-1">₽</span>
               <span className="text-white text-xs mb-1.5 ml-1" style={{ opacity: 0.6 }}>спишется с кошелька</span>
             </div>
-            <button className="btn-green font-black px-8 py-3" style={{ fontSize: '0.95rem' }} onClick={handleSubmit} disabled={loading}>
+            <button
+              className="btn-green font-black px-8 py-3"
+              style={{ fontSize: '0.95rem' }}
+              onClick={handleSubmit}
+              disabled={loading}
+            >
               <span className="material-symbols-outlined text-base">send</span>
               {loading ? 'Публикуем...' : 'Опубликовать поручение'}
             </button>

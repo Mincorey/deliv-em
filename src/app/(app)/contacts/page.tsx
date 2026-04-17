@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useToast } from '@/components/ui/Toast'
+import { sendToTelegram } from './actions'
 
 const SUBJECTS = [
   'Вопрос о сервисе',
@@ -83,6 +84,9 @@ export default function ContactsPage() {
       user_id: user?.id ?? null, name: name.trim(),
       email: email.trim(), subject, message: message.trim(),
     })
+    if (!error) {
+      await sendToTelegram({ name: name.trim(), email: email.trim(), subject, message: message.trim() })
+    }
     setLoading(false)
     if (error) {
       toast.show('Ошибка отправки. Попробуйте ещё раз', 'error')
@@ -100,9 +104,8 @@ export default function ContactsPage() {
   }
 
   const contacts = [
-    { icon: 'email',       label: 'support@delivem.ru' },
-    { icon: 'phone',       label: '+7 (940) 000-00-00' },
-    { icon: 'location_on', label: 'Сухум, Республика Абхазия' },
+    { icon: 'email',       label: 'mincorey@internet.ru' },
+    { icon: 'location_on', label: "Deliv'em | Республика Абхазия, г. Сухум | All Rights Reserved" },
   ]
 
   return (
@@ -114,15 +117,13 @@ export default function ContactsPage() {
 
       <div className="p-6 mb-4" style={card}>
         <div className="flex flex-col gap-4">
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="label-sm">Ваше имя *</label>
-              <input className="input-field" placeholder="Алексей" value={name} onChange={(e) => setName(e.target.value)} />
-            </div>
-            <div>
-              <label className="label-sm">Email *</label>
-              <input className="input-field" type="email" placeholder="alex@mail.ru" value={email} onChange={(e) => setEmail(e.target.value)} />
-            </div>
+          <div>
+            <label className="label-sm">Ваше имя *</label>
+            <input className="input-field" placeholder="Алексей" value={name} onChange={(e) => setName(e.target.value)} />
+          </div>
+          <div>
+            <label className="label-sm">Email *</label>
+            <input className="input-field" type="email" placeholder="alex@mail.ru" value={email} onChange={(e) => setEmail(e.target.value)} />
           </div>
 
           <div>

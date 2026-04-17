@@ -41,15 +41,15 @@ export default async function OrdersPage({
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
-      <h2 className="text-xl font-bold mb-1" style={{ color: 'var(--text-1)' }}>Архив поручений</h2>
+      <h2 className="text-xl font-bold mb-1 page-header" style={{ color: 'var(--text-1)' }}>Архив поручений</h2>
       <p className="text-sm mb-5" style={{ color: 'var(--text-3)' }}>Все ваши завершённые и отменённые поручения</p>
 
-      <div className="flex gap-2 mb-5 overflow-x-auto pb-1">
+      <div className="orders-filters flex gap-2 mb-5 pb-1">
         {filters.map((f) => (
           <a
             key={f.value}
             href={`/orders?filter=${f.value}`}
-            className={`badge cursor-pointer ${filter === f.value ? f.cls : 'badge-gray'}`}
+            className={`filter-btn badge cursor-pointer ${filter === f.value ? f.cls : 'badge-gray'}`}
             style={{ padding: '6px 14px' }}
           >
             {f.label}
@@ -70,9 +70,9 @@ export default async function OrdersPage({
         </div>
       ) : (
         <div className="text-center py-16">
-          <span className="material-symbols-outlined" style={{ fontSize: '4rem', color: 'var(--text-4)' }}>history</span>
-          <p className="font-bold mt-3" style={{ color: 'var(--text-3)' }}>Архив пуст</p>
-          <p className="text-sm mt-1" style={{ color: 'var(--text-4)' }}>Завершённые поручения появятся здесь</p>
+          <span className="material-symbols-outlined icon-float" style={{ fontSize: '4rem', color: 'var(--text-3)' }}>history</span>
+          <p className="font-bold mt-3" style={{ color: 'var(--text-2)' }}>Архив пуст</p>
+          <p className="text-sm mt-1" style={{ color: 'var(--text-3)' }}>Завершённые поручения появятся здесь</p>
         </div>
       )}
     </div>

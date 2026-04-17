@@ -46,7 +46,7 @@ async function CustomerActiveTasks({ userId }: { userId: string }) {
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
-      <div className="flex items-center justify-between mb-1">
+      <div className="flex items-center justify-between mb-1 page-header">
         <h2 className="text-xl font-bold">Активные поручения</h2>
         <Link href="/tasks/create">
           <button className="btn-green text-sm">
@@ -54,7 +54,7 @@ async function CustomerActiveTasks({ userId }: { userId: string }) {
           </button>
         </Link>
       </div>
-      <p className="text-sm mb-5" style={{ color: '#757682' }}>
+      <p className="text-sm mb-5" style={{ color: 'var(--text-3)' }}>
         Поручения, которые выполняются прямо сейчас
       </p>
 
@@ -65,16 +65,17 @@ async function CustomerActiveTasks({ userId }: { userId: string }) {
               key={task.id}
               task={task as unknown as TaskWithProfiles}
               showCourier
+              currentUserId={userId}
             />
           ))}
         </div>
       ) : (
         <div className="text-center py-16">
-          <span className="material-symbols-outlined" style={{ fontSize: '4rem', color: '#c5c5d3' }}>
+          <span className="material-symbols-outlined icon-float" style={{ fontSize: '4rem', color: 'var(--text-3)' }}>
             rocket_launch
           </span>
-          <p className="font-bold mt-3" style={{ color: '#757682' }}>Нет активных поручений</p>
-          <p className="text-sm mt-1 mb-5" style={{ color: '#c5c5d3' }}>
+          <p className="font-bold mt-3" style={{ color: 'var(--text-2)' }}>Нет активных поручений</p>
+          <p className="text-sm mt-1 mb-5" style={{ color: 'var(--text-3)' }}>
             Создайте новое — курьеры уже готовы
           </p>
           <Link href="/tasks/create">
@@ -116,20 +117,10 @@ async function CourierFeed({
 
   const { data: tasks } = await query
 
-  const TASK_TYPES = [
-    { value: 'all', label: 'Все типы' },
-    { value: 'documents', label: 'Документы' },
-    { value: 'groceries', label: 'Продукты' },
-    { value: 'materials', label: 'Материалы' },
-    { value: 'gift', label: 'Подарок' },
-    { value: 'meeting', label: 'Встреча' },
-    { value: 'parcel', label: 'Посылка' },
-  ]
-
   return (
     <div className="p-6 max-w-4xl mx-auto">
-      <h2 className="text-xl font-bold mb-1">Поиск заданий</h2>
-      <p className="text-sm mb-4" style={{ color: '#757682' }}>
+      <h2 className="text-xl font-bold mb-1 page-header">Поиск заданий</h2>
+      <p className="text-sm mb-4" style={{ color: 'var(--text-3)' }}>
         Свободные поручения от заказчиков
       </p>
 
@@ -149,11 +140,11 @@ async function CourierFeed({
         </div>
       ) : (
         <div className="text-center py-16">
-          <span className="material-symbols-outlined" style={{ fontSize: '4rem', color: '#c5c5d3' }}>
+          <span className="material-symbols-outlined icon-float" style={{ fontSize: '4rem', color: 'var(--text-3)' }}>
             search
           </span>
-          <p className="font-bold mt-3" style={{ color: '#757682' }}>Нет доступных заданий</p>
-          <p className="text-sm mt-1" style={{ color: '#c5c5d3' }}>
+          <p className="font-bold mt-3" style={{ color: 'var(--text-2)' }}>Нет доступных заданий</p>
+          <p className="text-sm mt-1" style={{ color: 'var(--text-3)' }}>
             Попробуйте изменить фильтры или вернитесь позже
           </p>
         </div>

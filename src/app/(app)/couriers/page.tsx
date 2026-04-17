@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { Avatar } from '@/components/ui/Avatar'
 import { FavoriteButton } from './FavoriteButton'
@@ -29,7 +30,7 @@ export default async function CouriersPage() {
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
-      <h2 className="text-xl font-bold mb-1" style={{ color: 'var(--text-1)' }}>Курьеры сервиса</h2>
+      <h2 className="text-xl font-bold mb-1 page-header" style={{ color: 'var(--text-1)' }}>Курьеры сервиса</h2>
       <p className="text-sm mb-5" style={{ color: 'var(--text-3)' }}>
         Все курьеры Deliv&apos;em, сортировка по рейтингу
       </p>
@@ -45,11 +46,15 @@ export default async function CouriersPage() {
 
               return (
                 <div key={courier.id} className="courier-card">
-                  <Avatar name={courier.full_name} avatarUrl={courier.avatar_url} size={48} />
+                  <Link href={`/profile/${courier.id}`} style={{ flexShrink: 0 }}>
+                    <Avatar name={courier.full_name} avatarUrl={courier.avatar_url} size={48} />
+                  </Link>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between">
                       <div>
-                        <p className="font-bold text-sm" style={{ color: 'var(--text-1)' }}>{courier.full_name}</p>
+                        <Link href={`/profile/${courier.id}`} style={{ textDecoration: 'none' }}>
+                          <p className="font-bold text-sm" style={{ color: 'var(--text-1)' }}>{courier.full_name}</p>
+                        </Link>
                         <div className="flex items-center gap-2 mt-0.5">
                           <span className="material-symbols-outlined" style={{ color: 'var(--text-3)', fontSize: 14 }}>location_on</span>
                           <span className="text-xs" style={{ color: 'var(--text-3)' }}>{courier.city}</span>
@@ -72,7 +77,7 @@ export default async function CouriersPage() {
                         </div>
                         <p className="text-xs" style={{ color: 'var(--text-3)' }}>{cp?.completed_tasks ?? 0} заданий</p>
                         <div className="flex items-center gap-1 justify-end mt-1">
-                          <div style={{
+                          <div className={cp?.is_available ? 'pulse-dot' : ''} style={{
                             width: 6, height: 6, borderRadius: 9999,
                             background: cp?.is_available ? 'var(--green)' : 'var(--text-4)',
                           }} />
@@ -90,8 +95,8 @@ export default async function CouriersPage() {
         </div>
       ) : (
         <div className="text-center py-16">
-          <span className="material-symbols-outlined" style={{ fontSize: '4rem', color: 'var(--text-4)' }}>directions_bike</span>
-          <p className="font-bold mt-3" style={{ color: 'var(--text-3)' }}>Нет зарегистрированных курьеров</p>
+          <span className="material-symbols-outlined icon-float" style={{ fontSize: '4rem', color: 'var(--text-3)' }}>directions_bike</span>
+          <p className="font-bold mt-3" style={{ color: 'var(--text-2)' }}>Нет зарегистрированных курьеров</p>
         </div>
       )}
     </div>

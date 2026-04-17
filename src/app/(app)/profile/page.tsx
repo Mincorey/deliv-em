@@ -4,8 +4,9 @@ import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useToast } from '@/components/ui/Toast'
-import { CITIES, TRANSPORT_META } from '@/lib/types'
-import type { Profile, CourierProfile, TransportType } from '@/lib/types'
+import { Modal } from '@/components/ui/Modal'
+import { CITIES, TRANSPORT_META, VEHICLE_TRANSPORT_TYPES } from '@/lib/types'
+import type { Profile, CourierProfile, TransportType, PrivacySettings } from '@/lib/types'
 
 /* ── Phone formatter ── */
 function formatPhone(input: string): string {
@@ -132,8 +133,9 @@ export default function ProfilePage() {
 
   const [profile, setProfile] = useState<Profile | null>(null)
   const [courierProfile, setCourierProfile] = useState<CourierProfile | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [avatarUploading, setAvatarUploading] = useState(false)
+  const [loading,           setLoading]           = useState(false)
+  const [avatarUploading,   setAvatarUploading]   = useState(false)
+  const [logoutConfirm,     setLogoutConfirm]     = useState(false)
 
   const [firstName, setFirstName]   = useState('')
   const [lastName, setLastName]     = useState('')
@@ -141,8 +143,8 @@ export default function ProfilePage() {
   const [city, setCity]             = useState('Сухум')
   const [bio, setBio]               = useState('')
   const [birthDate, setBirthDate]   = useState('')
-  const [hasCar, setHasCar]         = useState(false)
   const [transport, setTransport]   = useState<TransportType>('foot')
+  const [privacy, setPrivacy]       = useState<PrivacySettings>({})
 
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -161,7 +163,7 @@ export default function ProfilePage() {
         setCity(prof.city ?? 'Сухум')
         setBio(prof.bio ?? '')
         setBirthDate(prof.birth_date ? isoToBirthDisplay(prof.birth_date) : '')
-        setHasCar(prof.has_car ?? false)
+        setPrivacy((prof.privacy_settings as PrivacySettings) ?? {})
       }
       if (prof?.role === 'courier') {
         const { data: cp } = await supabase.from('courier_profiles').select('*').eq('id', user.id).single()
@@ -203,17 +205,17 @@ export default function ProfilePage() {
     // Extended fields — require migration; fail gracefully
     const isoDate = birthDateToISO(birthDate)
     const { error: extErr } = await supabase.from('profiles')
-      .update({ birth_date: isoDate, has_car: hasCar })
+      .update({ birth_date: isoDate, privacy_settings: privacy })
       .eq('id', profile.id)
     if (extErr) {
-      toast.show('Выполните в Supabase SQL Editor:\nALTER TABLE public.profiles ADD COLUMN birth_date DATE;\nALTER TABLE public.profiles ADD COLUMN has_car BOOLEAN NOT NULL DEFAULT FALSE;', 'error')
+      toast.show('Выполните в Supabase SQL Editor:\nALTER TABLE public.profiles ADD COLUMN birth_date DATE;', 'error')
     }
 
     if (profile.role === 'courier') {
       await supabase.from('courier_profiles').update({ transport_type: transport }).eq('id', profile.id)
     }
 
-    setProfile((p) => p ? { ...p, full_name: fullName, phone, city, bio: bio || null, birth_date: isoDate, has_car: hasCar } : p)
+    setProfile((p) => p ? { ...p, full_name: fullName, phone, city, bio: bio || null, birth_date: isoDate } : p)
     setLoading(false)
     if (!extErr) toast.show('Профиль сохранён', 'success')
   }
@@ -223,7 +225,6 @@ export default function ProfilePage() {
     router.push('/auth')
   }
 
-  const transportOptions = Object.entries(TRANSPORT_META) as [TransportType, (typeof TRANSPORT_META)[TransportType]][]
   const initials = ((firstName[0] ?? '') + (lastName[0] ?? '')).toUpperCase() || '?'
   const roleLabel = profile?.role === 'customer' ? 'Заказчик' : 'Курьер'
 
@@ -353,26 +354,33 @@ export default function ProfilePage() {
             <CitySelect value={city} onChange={setCity} />
           </div>
 
-          {/* Has car toggle */}
-          <div>
-            <label className="label-sm">Дополнительно</label>
-            <Toggle value={hasCar} onChange={setHasCar} label="Есть личный автомобиль" />
-          </div>
-
           {/* Courier-only fields */}
           {profile?.role === 'courier' && (
             <>
               <div>
-                <label className="label-sm">Тип транспорта</label>
-                <div className="grid grid-cols-3 gap-2">
-                  {transportOptions.map(([t, meta]) => (
-                    <button key={t} onClick={() => setTransport(t)} className={`type-btn text-xs ${transport === t ? 'selected' : ''}`}>
-                      <span className="material-symbols-outlined">{meta.icon}</span>
-                      {meta.label}
-                    </button>
-                  ))}
-                </div>
+                <label className="label-sm">Транспорт</label>
+                <Toggle
+                  value={transport !== 'foot'}
+                  onChange={(on) => setTransport(on ? 'car' : 'foot')}
+                  label="Есть транспорт"
+                />
               </div>
+              {transport !== 'foot' && (
+                <div>
+                  <label className="label-sm">Тип транспорта</label>
+                  <div className="grid grid-cols-4 gap-2">
+                    {VEHICLE_TRANSPORT_TYPES.map((t) => {
+                      const meta = TRANSPORT_META[t]
+                      return (
+                        <button key={t} onClick={() => setTransport(t)} className={`type-btn text-xs ${transport === t ? 'selected' : ''}`}>
+                          <span className="material-symbols-outlined">{meta.icon}</span>
+                          {meta.label}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
               <div>
                 <label className="label-sm">О себе</label>
                 <textarea
@@ -400,6 +408,31 @@ export default function ProfilePage() {
             </>
           )}
 
+          {/* Privacy settings */}
+          <div>
+            <label className="label-sm">Конфиденциальность</label>
+            <p className="text-xs mb-3" style={{ color: 'var(--text-3)', marginTop: 2 }}>
+              Выберите, что будет видно другим пользователям в вашем профиле
+            </p>
+            <div className="flex flex-col gap-2">
+              <Toggle
+                value={!!privacy.show_phone}
+                onChange={(v) => setPrivacy((p) => ({ ...p, show_phone: v }))}
+                label="Показывать номер телефона"
+              />
+              <Toggle
+                value={!!privacy.show_bio}
+                onChange={(v) => setPrivacy((p) => ({ ...p, show_bio: v }))}
+                label="Показывать «О себе»"
+              />
+              <Toggle
+                value={!!privacy.show_birth_date}
+                onChange={(v) => setPrivacy((p) => ({ ...p, show_birth_date: v }))}
+                label="Показывать возраст"
+              />
+            </div>
+          </div>
+
           <button
             className="btn-primary"
             style={{ justifyContent: 'center', padding: '14px' }}
@@ -411,33 +444,84 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* Logout — centered */}
-      <div style={{ display: 'flex', justifyContent: 'center' }}>
-      <button
-        onClick={handleLogout}
-        style={{
-          display: 'inline-flex', alignItems: 'center', gap: 8,
-          padding: '11px 22px', borderRadius: 9999,
-          border: '1.5px solid rgba(186,26,26,0.4)',
-          background: 'rgba(186,26,26,0.08)',
-          color: '#e53935', fontWeight: 700, fontSize: '0.875rem',
-          cursor: 'pointer', transition: 'background 0.18s, border-color 0.18s',
-        }}
-        onMouseEnter={(e) => {
-          const el = e.currentTarget
-          el.style.background = '#e53935'
-          el.style.color = '#fff'
-        }}
-        onMouseLeave={(e) => {
-          const el = e.currentTarget
-          el.style.background = 'rgba(186,26,26,0.08)'
-          el.style.color = '#e53935'
-        }}
-      >
-        <span className="material-symbols-outlined" style={{ fontSize: 18 }}>logout</span>
-        Выйти из аккаунта
-      </button>
+      {/* Logout */}
+      <div className="profile-logout-wrap">
+        <button
+          onClick={() => setLogoutConfirm(true)}
+          className="profile-logout-btn"
+          style={{
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+            padding: '11px 22px', borderRadius: 9999,
+            border: '1.5px solid rgba(186,26,26,0.4)',
+            background: 'rgba(186,26,26,0.08)',
+            color: '#e53935', fontWeight: 700, fontSize: '0.875rem',
+            cursor: 'pointer', transition: 'background 0.18s, border-color 0.18s, color 0.18s',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = '#e53935'
+            e.currentTarget.style.color = '#fff'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'rgba(186,26,26,0.08)'
+            e.currentTarget.style.color = '#e53935'
+          }}
+        >
+          <span className="material-symbols-outlined" style={{ fontSize: 18 }}>logout</span>
+          Выйти из аккаунта
+        </button>
       </div>
+
+      {/* Logout confirmation modal */}
+      <Modal open={logoutConfirm} onClose={() => setLogoutConfirm(false)} maxWidth="420px">
+        <div style={{ padding: '2rem' }}>
+          {/* Icon */}
+          <div style={{
+            width: 64, height: 64, borderRadius: 9999, margin: '0 auto 1.25rem',
+            background: 'rgba(186,26,26,0.10)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <span className="material-symbols-outlined" style={{ fontSize: 32, color: '#e53935' }}>logout</span>
+          </div>
+
+          {/* Title */}
+          <h3 style={{ textAlign: 'center', fontSize: '1.15rem', fontWeight: 800, color: 'var(--text-1)', marginBottom: '0.5rem' }}>
+            Выйти из аккаунта?
+          </h3>
+
+          {/* Body */}
+          <p style={{ textAlign: 'center', fontSize: '0.875rem', color: 'var(--text-3)', lineHeight: 1.6, marginBottom: '1.75rem' }}>
+            Вы будете перенаправлены на страницу входа.<br />
+            Все несохранённые данные будут потеряны.
+          </p>
+
+          {/* Buttons */}
+          <div style={{ display: 'flex', gap: '0.75rem' }}>
+            <button
+              className="btn-ghost"
+              style={{ flex: 1, justifyContent: 'center', padding: '13px' }}
+              onClick={() => setLogoutConfirm(false)}
+            >
+              Отмена
+            </button>
+            <button
+              style={{
+                flex: 1, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                padding: '13px', borderRadius: 9999,
+                background: '#e53935', color: '#fff',
+                fontWeight: 700, fontSize: '0.875rem',
+                border: 'none', cursor: 'pointer',
+                transition: 'opacity 0.18s, transform 0.15s',
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.88'; e.currentTarget.style.transform = 'scale(1.02)' }}
+              onMouseLeave={(e) => { e.currentTarget.style.opacity = '1';    e.currentTarget.style.transform = 'scale(1)' }}
+              onClick={handleLogout}
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: 18 }}>logout</span>
+              Выйти
+            </button>
+          </div>
+        </div>
+      </Modal>
 
       {/* Camera overlay hover via CSS */}
       <style>{`

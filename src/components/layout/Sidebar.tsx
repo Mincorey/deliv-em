@@ -14,7 +14,7 @@ interface NavItem {
 const NAV_CUSTOMER: NavItem[] = [
   { href: '/dashboard',    icon: 'dashboard',             label: 'Обзор' },
   { href: '/tasks',        icon: 'rocket_launch',         label: 'Активные' },
-  { href: '/orders',       icon: 'history',               label: 'Архив заказов' },
+  { href: '/orders',       icon: 'history',               label: 'Архив' },
   { href: '/tasks/create', icon: 'add_circle',            label: 'Создать поручение' },
   { href: '/couriers',     icon: 'directions_bike',       label: 'Курьеры' },
   { href: '/favorites',    icon: 'favorite',              label: 'Избранные' },
@@ -27,6 +27,7 @@ const NAV_CUSTOMER: NavItem[] = [
 const NAV_COURIER: NavItem[] = [
   { href: '/dashboard', icon: 'dashboard',    label: 'Обзор' },
   { href: '/tasks',     icon: 'search',       label: 'Поиск заданий' },
+  { href: '/active',    icon: 'rocket_launch', label: 'Активные' },
   { href: '/orders',    icon: 'history',      label: 'Архив' },
   { href: '/favorites', icon: 'favorite',     label: 'Избранные заказчики' },
   { href: '/messages',  icon: 'chat_bubble',  label: 'Сообщения' },

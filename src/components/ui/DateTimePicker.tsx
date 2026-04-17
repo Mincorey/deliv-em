@@ -17,7 +17,9 @@ const WEEKDAYS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс']
 function pad(n: number) { return String(n).padStart(2, '0') }
 
 function toLocalStr(year: number, month: number, day: number, h: number, m: number) {
-  return `${year}-${pad(month + 1)}-${pad(day)}T${pad(h)}:${pad(m)}`
+  // Use local Date constructor so the timezone offset is included in the ISO string,
+  // preventing Supabase from treating the value as UTC instead of local time.
+  return new Date(year, month, day, h, m).toISOString()
 }
 
 function formatDisplay(year: number, month: number, day: number, h: number, m: number) {
