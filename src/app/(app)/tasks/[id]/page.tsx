@@ -349,7 +349,7 @@ export default function TaskDetailPage() {
                 </div>
               </Link>
             )}
-          </div>
+          </AnimatedItem>
         )}
 
         {/* Progress */}
@@ -472,6 +472,6 @@ export default function TaskDetailPage() {
           />
         )}
       </div>
-    </div>
+    </AnimatedPage>
   )
 }

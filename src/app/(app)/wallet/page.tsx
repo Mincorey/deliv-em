@@ -23,23 +23,22 @@ export default function WalletPage() {
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [amount,       setAmount]       = useState('')
   const [loading,      setLoading]      = useState(false)
+  const [pageLoading,  setPageLoading]  = useState(true)
+  const [loadError,    setLoadError]    = useState(false)
 
   useEffect(() => {
     async function load() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.push('/auth'); return }
 
-      const [{ data: prof }, { data: txs }] = await Promise.all([
-        supabase.from('profiles').select('*').eq('id', user.id).single(),
-        supabase
-          .from('transactions')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false })
-          .limit(10),
+      const [{ data: prof, error: profErr }, { data: txs }] = await Promise.all([
+        supabase.from('profiles').select('id, full_name, role, wallet_balance, city, avatar_url').eq('id', user.id).single(),
+        supabase.from('transactions').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(10),
       ])
+      if (profErr) { setLoadError(true); setPageLoading(false); return }
       setProfile(prof as Profile)
       setTransactions((txs ?? []) as Transaction[])
+      setPageLoading(false)
     }
     load()
   }, [])
@@ -81,6 +80,22 @@ export default function WalletPage() {
     boxShadow   : 'var(--shadow-sm)',
     borderRadius: '1rem',
   }
+
+  if (pageLoading) return (
+    <div className="p-6 max-w-2xl mx-auto">
+      <div style={{ height: 28, width: 120, borderRadius: 8, marginBottom: 20 }} className="skeleton" />
+      <div style={{ borderRadius: '1rem', height: 120, marginBottom: 16 }} className="skeleton" />
+      <div style={{ borderRadius: '1rem', height: 200 }} className="skeleton" />
+    </div>
+  )
+
+  if (loadError) return (
+    <div className="p-6 text-center py-20">
+      <span className="material-symbols-outlined" style={{ fontSize: '3rem', color: 'var(--text-3)' }}>error_outline</span>
+      <p className="font-bold mt-3" style={{ color: 'var(--text-2)' }}>Не удалось загрузить кошелёк</p>
+      <button className="btn-ghost mt-4" onClick={() => window.location.reload()}>Попробовать снова</button>
+    </div>
+  )
 
   return (
     <AnimatedPage className="p-6 max-w-2xl mx-auto">

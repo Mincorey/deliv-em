@@ -6,7 +6,8 @@ import { createClient } from '@/lib/supabase/client'
 import { AvatarCropper } from '@/components/ui/AvatarCropper'
 import { useToast } from '@/components/ui/Toast'
 import { Modal } from '@/components/ui/Modal'
-import { CITIES, TRANSPORT_META, VEHICLE_TRANSPORT_TYPES } from '@/lib/types'
+import { TRANSPORT_META, VEHICLE_TRANSPORT_TYPES } from '@/lib/types'
+import { CitySelect } from '@/components/ui/CitySelect'
 import type { Profile, CourierProfile, TransportType, PrivacySettings } from '@/lib/types'
 
 /* ── Phone formatter ── */
@@ -41,64 +42,6 @@ function isoToBirthDisplay(iso: string): string {
   return `${parts[2]}.${parts[1]}.${parts[0]}`
 }
 
-/* ── Custom city dropdown ── */
-function CitySelect({ value, onChange }: { value: string; onChange: (v: string) => void }) {
-  const [open, setOpen] = useState(false)
-  const ref = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    function onMouseDown(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
-    }
-    document.addEventListener('mousedown', onMouseDown)
-    return () => document.removeEventListener('mousedown', onMouseDown)
-  }, [])
-
-  return (
-    <div ref={ref} style={{ position: 'relative' }}>
-      <button
-        type="button"
-        onClick={() => setOpen((o) => !o)}
-        className="input-field"
-        style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', textAlign: 'left' }}
-      >
-        <span>{value}</span>
-        <span
-          className="material-symbols-outlined"
-          style={{ fontSize: 18, color: 'var(--text-3)', transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}
-        >
-          expand_more
-        </span>
-      </button>
-      {open && (
-        <div style={{
-          position: 'absolute', top: 'calc(100% + 6px)', left: 0, right: 0,
-          background: 'var(--surface)', border: '1.5px solid var(--border)',
-          borderRadius: '1rem', boxShadow: 'var(--shadow-md)', zIndex: 50,
-          overflow: 'hidden', animation: 'fadeInUp 0.18s cubic-bezier(0.22,1,0.36,1) both',
-        }}>
-          {CITIES.map((c, i) => (
-            <button
-              key={c} type="button"
-              onClick={() => { onChange(c); setOpen(false) }}
-              style={{
-                display: 'block', width: '100%', padding: '10px 20px', textAlign: 'left',
-                background: value === c ? 'var(--brand-soft)' : 'transparent',
-                color: value === c ? 'var(--brand-text)' : 'var(--text-1)',
-                fontWeight: value === c ? 700 : 400, fontSize: '0.9rem',
-                cursor: 'pointer', border: 'none',
-                borderTop: i > 0 ? '1px solid var(--border)' : 'none',
-                transition: 'background 0.15s',
-              }}
-            >
-              {c}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  )
-}
 
 /* ── Toggle switch ── */
 function Toggle({ value, onChange, label }: { value: boolean; onChange: (v: boolean) => void; label: string }) {
@@ -226,6 +169,9 @@ export default function ProfilePage() {
   /* ── Save ── */
   async function handleSave() {
     if (!profile) return
+    if (!firstName.trim()) { toast.show('Введите имя', 'error'); return }
+    if (phone && !/^\+7 \(\d{3}\) \d{3}-\d{2}-\d{2}$/.test(phone)) { toast.show('Введите корректный номер телефона', 'error'); return }
+    if (bio && bio.length > 300) { toast.show('Биография не может быть длиннее 300 символов', 'error'); return }
     setLoading(true)
     const fullName = `${firstName} ${lastName}`.trim()
     const isoDate = birthDateToISO(birthDate)

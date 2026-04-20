@@ -31,6 +31,7 @@ export default function MessagesPage() {
   const [tasks,       setTasks]       = useState<TaskRow[]>([])
   const [lastMsgMap,  setLastMsgMap]  = useState<Map<string, MsgRow>>(new Map())
   const [loading,     setLoading]     = useState(true)
+  const [loadError,   setLoadError]   = useState(false)
 
   useEffect(() => {
     async function load() {
@@ -38,7 +39,7 @@ export default function MessagesPage() {
       if (!user) { router.push('/auth'); return }
       setUserId(user.id)
 
-      const { data: rawTasks } = await supabase
+      const { data: rawTasks, error: tasksError } = await supabase
         .from('tasks')
         .select(`id, title, status,
           customer:profiles!tasks_customer_id_fkey(id, full_name, avatar_url),
@@ -47,6 +48,7 @@ export default function MessagesPage() {
         .not('courier_id', 'is', null)
         .order('updated_at', { ascending: false })
 
+      if (tasksError) { setLoadError(true); setLoading(false); return }
       const taskList = (rawTasks ?? []) as unknown as TaskRow[]
       setTasks(taskList)
 
@@ -70,8 +72,26 @@ export default function MessagesPage() {
   }, [])
 
   if (loading) return (
-    <div className="p-6 flex justify-center py-20">
-      <span className="material-symbols-outlined animate-spin" style={{ fontSize: 32, color: 'var(--text-4)' }}>progress_activity</span>
+    <div style={{ maxWidth: 800, margin: '0 auto', padding: '24px' }}>
+      <div style={{ height: 28, width: 160, borderRadius: 8, marginBottom: 20 }} className="skeleton" />
+      {[1, 2, 3, 4].map(i => (
+        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 0', borderBottom: '1px solid var(--border)' }}>
+          <div style={{ width: 48, height: 48, borderRadius: '50%', flexShrink: 0 }} className="skeleton" />
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div style={{ height: 14, width: '60%', borderRadius: 6 }} className="skeleton" />
+            <div style={{ height: 12, width: '80%', borderRadius: 6 }} className="skeleton" />
+          </div>
+          <div style={{ height: 12, width: 40, borderRadius: 6 }} className="skeleton" />
+        </div>
+      ))}
+    </div>
+  )
+
+  if (loadError) return (
+    <div className="p-6 text-center py-20">
+      <span className="material-symbols-outlined" style={{ fontSize: '3rem', color: 'var(--text-3)' }}>error_outline</span>
+      <p className="font-bold mt-3" style={{ color: 'var(--text-2)' }}>Не удалось загрузить сообщения</p>
+      <button className="btn-ghost mt-4" onClick={() => window.location.reload()}>Попробовать снова</button>
     </div>
   )
 

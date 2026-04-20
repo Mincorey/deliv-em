@@ -23,6 +23,7 @@ export default function OrdersPage() {
   const [tasks,      setTasks]      = useState<TaskWithProfiles[]>([])
   const [isCustomer, setIsCustomer] = useState(true)
   const [loading,    setLoading]    = useState(true)
+  const [loadError,  setLoadError]  = useState(false)
   const [filter,     setFilter]     = useState<Filter>((searchParams.get('filter') as Filter) ?? 'all')
 
   useEffect(() => {
@@ -40,7 +41,8 @@ export default function OrdersPage() {
         .in('status', ['completed', 'cancelled'])
         .order('created_at', { ascending: false })
 
-      const { data } = await (customer ? q.eq('customer_id', user.id) : q.eq('courier_id', user.id))
+      const { data, error } = await (customer ? q.eq('customer_id', user.id) : q.eq('courier_id', user.id))
+      if (error) { setLoadError(true); setLoading(false); return }
       setTasks((data ?? []) as unknown as TaskWithProfiles[])
       setLoading(false)
     }
@@ -55,6 +57,14 @@ export default function OrdersPage() {
     setFilter(f)
     router.replace(`/orders?filter=${f}`, { scroll: false })
   }, [router])
+
+  if (loadError) return (
+    <div className="p-6 text-center py-20">
+      <span className="material-symbols-outlined" style={{ fontSize: '3rem', color: 'var(--text-3)' }}>error_outline</span>
+      <p className="font-bold mt-3" style={{ color: 'var(--text-2)' }}>Не удалось загрузить историю</p>
+      <button className="btn-ghost mt-4" onClick={() => window.location.reload()}>Попробовать снова</button>
+    </div>
+  )
 
   return (
     <AnimatedPage className="p-6 max-w-4xl mx-auto">
@@ -76,8 +86,17 @@ export default function OrdersPage() {
       </AnimatedItem>
 
       {loading ? (
-        <div className="flex justify-center py-20">
-          <span className="material-symbols-outlined animate-spin" style={{ fontSize: 32, color: 'var(--text-4)' }}>progress_activity</span>
+        <div className="flex flex-col gap-3">
+          {[1, 2, 3].map(i => (
+            <div key={i} style={{ borderRadius: '1rem', padding: '1rem', border: '1.5px solid var(--border)', background: 'var(--surface)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
+                <div style={{ height: 16, width: '50%', borderRadius: 6 }} className="skeleton" />
+                <div style={{ height: 16, width: 70, borderRadius: 6 }} className="skeleton" />
+              </div>
+              <div style={{ height: 12, width: '75%', borderRadius: 6, marginBottom: 8 }} className="skeleton" />
+              <div style={{ height: 12, width: '55%', borderRadius: 6 }} className="skeleton" />
+            </div>
+          ))}
         </div>
       ) : visible.length > 0 ? (
         <AnimatedList className="flex flex-col gap-3">

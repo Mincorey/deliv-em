@@ -642,3 +642,9 @@ Added legal document pages: /privacy (Privacy Policy) and /terms (Terms of Use).
 ---
 Query performance optimization: parallel requests instead of sequential (Promise.all), removed select('*') in favor of explicit field lists. Affected: dashboard, tasks, tasks/[id], orders, active, CourierFeed.
 ==============
+
+[2026-04-20]
+Рефакторинг по результатам аудита: вынесен shared CitySelect (4 дублирующихся компонента → один), LandingClient.tsx разбит на 7 секций (~32 строки вместо 735), спиннеры заменены скелетонами в messages/orders/wallet, добавлена обработка ошибок БД в messages/orders/wallet, клиентская валидация в форме профиля, исправлены JSX-теги в tasks/[id].
+---
+Refactor per audit: shared CitySelect extracted (4 duplicates → one), LandingClient.tsx split into 7 sections (~32 lines vs 735), spinners replaced with skeletons in messages/orders/wallet, DB error handling added in messages/orders/wallet, client-side validation in profile form, fixed JSX tags in tasks/[id].
+==============
