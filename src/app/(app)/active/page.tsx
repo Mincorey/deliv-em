@@ -22,7 +22,7 @@ export default function ActiveTasksPage() {
 
       const { data, error: qErr } = await supabase
         .from('tasks')
-        .select(`*, customer:profiles!tasks_customer_id_fkey(*), courier:profiles!tasks_courier_id_fkey(*)`)
+        .select(`id, title, from_address, to_address, status, task_type, reward, deadline, customer_id, courier_id, city, created_at, completed_at, customer:profiles!tasks_customer_id_fkey(id, full_name, avatar_url), courier:profiles!tasks_courier_id_fkey(id, full_name, avatar_url)`)
         .eq('courier_id', user.id)
         .in('status', ['matched', 'in_progress', 'awaiting_confirmation'])
         .order('created_at', { ascending: false })

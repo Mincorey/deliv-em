@@ -636,3 +636,9 @@ Landing page refinements: badge text changed to "Работаем по всей 
 ---
 Added legal document pages: /privacy (Privacy Policy) and /terms (Terms of Use). Both documents are styled as clean card-based layouts with icons, sections, and lists. The /about page now includes a "Legal documents" card with link buttons to both pages.
 ==============
+
+[2026-04-20]
+Оптимизация запросов к базе данных: параллельные запросы вместо последовательных (Promise.all), убраны select('*') — теперь запрашиваются только нужные поля. Затронуты: dashboard, tasks, tasks/[id], orders, active, CourierFeed.
+---
+Query performance optimization: parallel requests instead of sequential (Promise.all), removed select('*') in favor of explicit field lists. Affected: dashboard, tasks, tasks/[id], orders, active, CourierFeed.
+==============

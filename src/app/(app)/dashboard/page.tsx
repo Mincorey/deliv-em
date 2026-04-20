@@ -35,27 +35,25 @@ async function CustomerDashboard({ profile, userId }: { profile: Profile; userId
     customer:profiles!tasks_customer_id_fkey(id, full_name),
     courier:profiles!tasks_courier_id_fkey(id, full_name)`
 
-  const { data: activeTasks } = await supabase
-    .from('tasks')
-    .select(TASK_FIELDS)
-    .eq('customer_id', userId)
-    .in('status', ['published', 'matched', 'in_progress', 'awaiting_confirmation'])
-    .order('created_at', { ascending: false })
-    .limit(10)
-
-  const { data: recentTasks } = await supabase
-    .from('tasks')
-    .select(TASK_FIELDS)
-    .eq('customer_id', userId)
-    .in('status', ['completed', 'cancelled'])
-    .order('completed_at', { ascending: false })
-    .limit(5)
-
-  const { count: totalCompleted } = await supabase
-    .from('tasks')
-    .select('id', { count: 'exact', head: true })
-    .eq('customer_id', userId)
-    .eq('status', 'completed')
+  const [
+    { data: activeTasks },
+    { data: recentTasks },
+    { count: totalCompleted },
+  ] = await Promise.all([
+    supabase.from('tasks').select(TASK_FIELDS)
+      .eq('customer_id', userId)
+      .in('status', ['published', 'matched', 'in_progress', 'awaiting_confirmation'])
+      .order('created_at', { ascending: false })
+      .limit(10),
+    supabase.from('tasks').select(TASK_FIELDS)
+      .eq('customer_id', userId)
+      .in('status', ['completed', 'cancelled'])
+      .order('completed_at', { ascending: false })
+      .limit(5),
+    supabase.from('tasks').select('id', { count: 'exact', head: true })
+      .eq('customer_id', userId)
+      .eq('status', 'completed'),
+  ])
 
   const firstName = profile.full_name.split(' ')[0]
 

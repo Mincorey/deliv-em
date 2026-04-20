@@ -46,7 +46,7 @@ export function CourierFeed({
 
     let query = supabase
       .from('tasks')
-      .select(`*, customer:profiles!tasks_customer_id_fkey(*), courier:profiles!tasks_courier_id_fkey(*)`)
+      .select(`id, title, from_address, to_address, status, task_type, reward, deadline, customer_id, courier_id, city, created_at, completed_at, customer:profiles!tasks_customer_id_fkey(id, full_name, avatar_url), courier:profiles!tasks_courier_id_fkey(id, full_name, avatar_url)`)
       .eq('status', 'published')
       .neq('customer_id', userId)
       .range(from, to)

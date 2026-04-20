@@ -32,25 +32,20 @@ export default function TaskDetailPage() {
     async function load() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.push('/auth'); return }
-      const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single()
-      setCurrentUser(profile as Profile)
-      const { data: taskData } = await supabase
-        .from('tasks')
-        .select(`*, customer:profiles!tasks_customer_id_fkey(*), courier:profiles!tasks_courier_id_fkey(*)`)
-        .eq('id', params.id as string)
-        .single()
-      setTask(taskData as unknown as TaskWithProfiles)
-
-      // Load my existing rating for this task
-      if (user) {
-        const { data: existingRating } = await supabase
-          .from('ratings')
-          .select('score')
+      const [{ data: profile }, { data: taskData }, { data: existingRating }] = await Promise.all([
+        supabase.from('profiles').select('id, full_name, role, wallet_balance, city, avatar_url, phone, bio, birth_date, privacy_settings').eq('id', user.id).single(),
+        supabase.from('tasks')
+          .select(`*, customer:profiles!tasks_customer_id_fkey(id, full_name, avatar_url, role, city), courier:profiles!tasks_courier_id_fkey(id, full_name, avatar_url, role, city)`)
+          .eq('id', params.id as string)
+          .single(),
+        supabase.from('ratings').select('score')
           .eq('task_id', params.id as string)
           .eq('from_user_id', user.id)
-          .maybeSingle()
-        if (existingRating) setMyRating(existingRating.score)
-      }
+          .maybeSingle(),
+      ])
+      setCurrentUser(profile as Profile)
+      setTask(taskData as unknown as TaskWithProfiles)
+      if (existingRating) setMyRating(existingRating.score)
 
       setLoading(false)
     }
@@ -69,7 +64,7 @@ export default function TaskDetailPage() {
       }, async () => {
         const { data } = await supabase
           .from('tasks')
-          .select(`*, customer:profiles!tasks_customer_id_fkey(*), courier:profiles!tasks_courier_id_fkey(*)`)
+          .select(`*, customer:profiles!tasks_customer_id_fkey(id, full_name, avatar_url, role, city), courier:profiles!tasks_courier_id_fkey(id, full_name, avatar_url, role, city)`)
           .eq('id', params.id as string)
           .single()
         if (data) setTask(data as unknown as TaskWithProfiles)
@@ -179,7 +174,7 @@ export default function TaskDetailPage() {
       toast.show('Готово!', 'success')
       const { data } = await supabase
         .from('tasks')
-        .select(`*, customer:profiles!tasks_customer_id_fkey(*), courier:profiles!tasks_courier_id_fkey(*)`)
+        .select(`*, customer:profiles!tasks_customer_id_fkey(id, full_name, avatar_url, role, city), courier:profiles!tasks_courier_id_fkey(id, full_name, avatar_url, role, city)`)
         .eq('id', task!.id).single()
       setTask(data as unknown as TaskWithProfiles)
     }

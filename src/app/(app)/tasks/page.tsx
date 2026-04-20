@@ -53,7 +53,9 @@ async function CustomerActiveTasks({ userId, highlightFilter }: { userId: string
 
   const { data: tasks } = await supabase
     .from('tasks')
-    .select(`*, customer:profiles!tasks_customer_id_fkey(*), courier:profiles!tasks_courier_id_fkey(*)`)
+    .select(`id, title, from_address, to_address, status, task_type, reward, deadline, customer_id, courier_id, city, created_at, completed_at,
+      customer:profiles!tasks_customer_id_fkey(id, full_name, avatar_url),
+      courier:profiles!tasks_courier_id_fkey(id, full_name, avatar_url)`)
     .eq('customer_id', userId)
     .in('status', ['published', 'matched', 'in_progress', 'awaiting_confirmation'])
     .order('created_at', { ascending: false })
