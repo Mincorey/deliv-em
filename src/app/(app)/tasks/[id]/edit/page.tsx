@@ -119,7 +119,7 @@ export default function EditTaskPage() {
           <div className="grid gap-3 mt-2" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))' }}>
             {TASK_TYPES.map(([type, meta]) => (
               <button key={type} onClick={() => setTaskType(type)} className={`type-btn ${taskType === type ? 'selected' : ''}`}>
-                <span className="material-symbols-outlined type-btn-icon" style={{ fontSize: '1.6rem' }}>{meta.icon}</span>
+                <span className="material-symbols-outlined type-btn-icon" style={{ fontSize: '1.6rem', color: meta.color }}>{meta.icon}</span>
                 <span className="text-xs font-bold">{meta.label}</span>
               </button>
             ))}

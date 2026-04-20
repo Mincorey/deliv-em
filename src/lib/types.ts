@@ -172,14 +172,14 @@ export interface TaskWithProfiles extends Omit<Task, 'customer' | 'courier'> {
 
 export const TASK_TYPE_META: Record<
   TaskType,
-  { label: string; icon: string; color: string }
+  { label: string; icon: string; color: string; bg: string }
 > = {
-  documents: { label: 'Документы', icon: 'description', color: '#00236f' },
-  groceries: { label: 'Продукты', icon: 'shopping_basket', color: '#006c49' },
-  materials: { label: 'Материалы', icon: 'construction', color: '#7b5e00' },
-  gift: { label: 'Подарок', icon: 'redeem', color: '#ba1a1a' },
-  meeting: { label: 'Встреча', icon: 'groups', color: '#4b1c00' },
-  parcel: { label: 'Посылка', icon: 'inventory_2', color: '#004d6e' },
+  documents: { label: 'Документы', icon: 'description',    color: '#4d8eff', bg: 'rgba(77,142,255,0.14)'  },
+  groceries: { label: 'Продукты',  icon: 'shopping_basket', color: '#22c55e', bg: 'rgba(34,197,94,0.14)'   },
+  materials: { label: 'Материалы', icon: 'construction',    color: '#f59e0b', bg: 'rgba(245,158,11,0.14)'  },
+  gift:      { label: 'Подарок',   icon: 'redeem',          color: '#f43f5e', bg: 'rgba(244,63,94,0.14)'   },
+  meeting:   { label: 'Встреча',   icon: 'groups',          color: '#a855f7', bg: 'rgba(168,85,247,0.14)'  },
+  parcel:    { label: 'Посылка',   icon: 'inventory_2',     color: '#0ea5e9', bg: 'rgba(14,165,233,0.14)'  },
 }
 
 export const STATUS_META: Record<

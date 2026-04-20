@@ -1,27 +1,39 @@
+import { Skeleton } from '@/components/ui/Skeleton'
+
 export default function WalletLoading() {
   return (
-    <div className="p-6 max-w-2xl mx-auto animate-pulse">
-      <div className="h-6 w-28 rounded bg-[var(--surface-variant)] mb-1" />
-      <div className="h-3 w-44 rounded bg-[var(--surface-variant)] mb-6" />
+    <div className="p-6 max-w-2xl mx-auto">
+      <Skeleton style={{ height: 22, width: 112, marginBottom: 8 }} />
+      <Skeleton style={{ height: 12, width: 176, marginBottom: 24 }} />
 
       {/* Balance card */}
-      <div className="glass rounded-2xl p-6 mb-4 h-36" />
+      <div className="rounded-2xl p-6 mb-4" style={{ background: 'var(--surface)', border: '1.5px solid var(--border)' }}>
+        <Skeleton style={{ height: 12, width: 88, marginBottom: 12 }} />
+        <Skeleton style={{ height: 44, width: 180, marginBottom: 10 }} />
+        <Skeleton style={{ height: 11, width: 130 }} />
+      </div>
 
       {/* Quick amounts */}
       <div className="flex gap-2 mb-4">
         {[...Array(4)].map((_, i) => (
-          <div key={i} className="h-9 flex-1 rounded-full bg-[var(--surface-variant)]" />
+          <Skeleton key={i} style={{ height: 36, flex: 1, borderRadius: 9999 }} />
         ))}
       </div>
 
       {/* Custom input */}
-      <div className="h-11 rounded-2xl bg-[var(--surface-variant)] mb-6" />
+      <Skeleton style={{ height: 44, width: '100%', borderRadius: '1rem', marginBottom: 24 }} />
 
       {/* History */}
-      <div className="h-5 w-32 rounded bg-[var(--surface-variant)] mb-3" />
+      <Skeleton style={{ height: 16, width: 128, marginBottom: 12 }} />
       <div className="flex flex-col gap-3">
         {[...Array(5)].map((_, i) => (
-          <div key={i} className="glass rounded-2xl p-4 h-16" />
+          <div key={i} className="rounded-2xl p-4 flex items-center justify-between gap-3" style={{ background: 'var(--surface)', border: '1.5px solid var(--border)' }}>
+            <div className="flex flex-col gap-2">
+              <Skeleton style={{ height: 14, width: 160 }} />
+              <Skeleton style={{ height: 11, width: 96 }} />
+            </div>
+            <Skeleton style={{ height: 18, width: 64 }} />
+          </div>
         ))}
       </div>
     </div>

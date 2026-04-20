@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { AvatarCropper } from '@/components/ui/AvatarCropper'
 import { useToast } from '@/components/ui/Toast'
 import { Modal } from '@/components/ui/Modal'
 import { CITIES, TRANSPORT_META, VEHICLE_TRANSPORT_TYPES } from '@/lib/types'
@@ -133,9 +134,12 @@ export default function ProfilePage() {
 
   const [profile, setProfile] = useState<Profile | null>(null)
   const [courierProfile, setCourierProfile] = useState<CourierProfile | null>(null)
+  const [liveCompleted, setLiveCompleted] = useState<number>(0)
+  const [liveRating, setLiveRating]       = useState<number | null>(null)
   const [loading,           setLoading]           = useState(false)
   const [avatarUploading,   setAvatarUploading]   = useState(false)
   const [logoutConfirm,     setLogoutConfirm]     = useState(false)
+  const [cropFile,          setCropFile]          = useState<File | null>(null)
 
   const [firstName, setFirstName]   = useState('')
   const [lastName, setLastName]     = useState('')
@@ -143,8 +147,8 @@ export default function ProfilePage() {
   const [city, setCity]             = useState('Сухум')
   const [bio, setBio]               = useState('')
   const [birthDate, setBirthDate]   = useState('')
-  const [transport, setTransport]   = useState<TransportType>('foot')
-  const [privacy, setPrivacy]       = useState<PrivacySettings>({})
+  const [transport, setTransport] = useState<TransportType>('foot')
+  const [privacy, setPrivacy]     = useState<PrivacySettings>({})
 
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -166,28 +170,57 @@ export default function ProfilePage() {
         setPrivacy((prof.privacy_settings as PrivacySettings) ?? {})
       }
       if (prof?.role === 'courier') {
-        const { data: cp } = await supabase.from('courier_profiles').select('*').eq('id', user.id).single()
+        const [{ data: cp }, { data: completedTasks }, { data: myRatings }] = await Promise.all([
+          supabase.from('courier_profiles').select('*').eq('id', user.id).single(),
+          supabase.from('tasks').select('id', { count: 'exact', head: true }).eq('courier_id', user.id).eq('status', 'completed'),
+          supabase.from('ratings').select('score').eq('to_user_id', user.id),
+        ])
         setCourierProfile(cp as CourierProfile)
-        if (cp) setTransport(cp.transport_type)
+        if (cp) { setTransport(cp.transport_type) }
+        setLiveCompleted((completedTasks as unknown as { count: number } | null)?.count ?? 0)
+        if (myRatings && myRatings.length > 0) {
+          const avg = myRatings.reduce((s: number, r: { score: number }) => s + r.score, 0) / myRatings.length
+          setLiveRating(Math.round(avg * 10) / 10)
+        }
       }
     }
     load()
   }, [])
 
-  /* ── Avatar upload ── */
-  async function handleAvatarFile(e: React.ChangeEvent<HTMLInputElement>) {
+  /* ── Avatar: open cropper on file select ── */
+  function handleAvatarFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
-    if (!file || !profile) return
+    if (!file) return
+    setCropFile(file)
+    e.target.value = ''
+  }
+
+  /* ── Avatar: upload cropped blob ── */
+  async function handleCropConfirm(blob: Blob) {
+    if (!profile) return
+    setCropFile(null)
     setAvatarUploading(true)
-    const ext = file.name.split('.').pop() ?? 'jpg'
-    const path = `${profile.id}/avatar.${ext}`
-    const { error: uploadErr } = await supabase.storage.from('avatars').upload(path, file, { upsert: true })
-    if (uploadErr) { toast.show('Ошибка загрузки фото', 'error'); setAvatarUploading(false); return }
-    const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(path)
-    await supabase.from('profiles').update({ avatar_url: publicUrl }).eq('id', profile.id)
-    setProfile((p) => p ? { ...p, avatar_url: publicUrl } : p)
-    setAvatarUploading(false)
-    toast.show('Фото обновлено', 'success')
+    try {
+      const path = `${profile.id}/avatar.jpg`
+      const { error: uploadErr } = await supabase.storage
+        .from('avatars')
+        .upload(path, blob, { upsert: true, contentType: 'image/jpeg' })
+      if (uploadErr) {
+        if (uploadErr.message.toLowerCase().includes('bucket')) {
+          throw new Error('Бакет "avatars" не найден. Создайте его в Supabase → Storage (публичный).')
+        }
+        throw new Error(uploadErr.message)
+      }
+      const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(path)
+      await supabase.from('profiles').update({ avatar_url: publicUrl }).eq('id', profile.id)
+      // Append cache-bust so browser reloads the image even if the URL is the same
+      setProfile((p) => p ? { ...p, avatar_url: `${publicUrl}?t=${Date.now()}` } : p)
+      toast.show('Фото обновлено', 'success')
+    } catch (err: any) {
+      toast.show(err?.message ?? 'Ошибка загрузки — попробуйте ещё раз', 'error')
+    } finally {
+      setAvatarUploading(false)
+    }
   }
 
   /* ── Save ── */
@@ -195,29 +228,22 @@ export default function ProfilePage() {
     if (!profile) return
     setLoading(true)
     const fullName = `${firstName} ${lastName}`.trim()
+    const isoDate = birthDateToISO(birthDate)
 
-    // Base fields — always exist in DB
     const { error } = await supabase.from('profiles')
-      .update({ full_name: fullName, phone, city, bio: bio || null })
+      .update({ full_name: fullName, phone, city, bio: bio || null, birth_date: isoDate, privacy_settings: privacy })
       .eq('id', profile.id)
     if (error) { toast.show(error.message, 'error'); setLoading(false); return }
 
-    // Extended fields — require migration; fail gracefully
-    const isoDate = birthDateToISO(birthDate)
-    const { error: extErr } = await supabase.from('profiles')
-      .update({ birth_date: isoDate, privacy_settings: privacy })
-      .eq('id', profile.id)
-    if (extErr) {
-      toast.show('Выполните в Supabase SQL Editor:\nALTER TABLE public.profiles ADD COLUMN birth_date DATE;', 'error')
-    }
-
     if (profile.role === 'courier') {
-      await supabase.from('courier_profiles').update({ transport_type: transport }).eq('id', profile.id)
+      await supabase.from('courier_profiles')
+        .update({ transport_type: transport })
+        .eq('id', profile.id)
     }
 
-    setProfile((p) => p ? { ...p, full_name: fullName, phone, city, bio: bio || null, birth_date: isoDate } : p)
+    setProfile((p) => p ? { ...p, full_name: fullName, phone, city, bio: bio || null, birth_date: isoDate, privacy_settings: privacy } : p)
     setLoading(false)
-    if (!extErr) toast.show('Профиль сохранён', 'success')
+    toast.show('Профиль сохранён', 'success')
   }
 
   async function handleLogout() {
@@ -229,6 +255,14 @@ export default function ProfilePage() {
   const roleLabel = profile?.role === 'customer' ? 'Заказчик' : 'Курьер'
 
   return (
+    <>
+    {cropFile && (
+      <AvatarCropper
+        file={cropFile}
+        onConfirm={handleCropConfirm}
+        onCancel={() => setCropFile(null)}
+      />
+    )}
     <div className="p-6 max-w-2xl mx-auto">
       <h2 className="text-xl font-bold mb-5" style={{ color: 'var(--text-1)' }}>Настройки профиля</h2>
 
@@ -392,11 +426,11 @@ export default function ProfilePage() {
               {courierProfile && (
                 <div className="rounded-xl p-4 flex gap-4" style={{ background: 'var(--surface-alt)', border: '1.5px solid var(--border)' }}>
                   <div className="text-center flex-1">
-                    <p className="text-2xl font-black" style={{ color: '#f59e0b' }}>{courierProfile.rating?.toFixed(1)}</p>
+                    <p className="text-2xl font-black" style={{ color: '#f59e0b' }}>{liveRating !== null ? liveRating.toFixed(1) : '—'}</p>
                     <p className="text-xs" style={{ color: 'var(--text-3)' }}>Рейтинг</p>
                   </div>
                   <div className="text-center flex-1">
-                    <p className="text-2xl font-black" style={{ color: 'var(--green)' }}>{courierProfile.completed_tasks}</p>
+                    <p className="text-2xl font-black" style={{ color: 'var(--green)' }}>{liveCompleted}</p>
                     <p className="text-xs" style={{ color: 'var(--text-3)' }}>Выполнено</p>
                   </div>
                   <div className="text-center flex-1">
@@ -528,5 +562,6 @@ export default function ProfilePage() {
         button:hover .avatar-overlay { opacity: 1 !important; }
       `}</style>
     </div>
+    </>
   )
 }

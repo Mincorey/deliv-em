@@ -186,6 +186,22 @@ button:active { opacity: 0.75; }
 [data-theme="dark"] .stat-card:hover {
   box-shadow: var(--shadow-md), 0 0 20px rgba(91,155,255,0.12);
 }
+.stat-card-link {
+  cursor: pointer;
+  height: 100%;
+}
+.stat-card-link:hover {
+  transform: translateY(-4px) scale(1.02) !important;
+  border-color: var(--brand) !important;
+  box-shadow: 0 8px 28px rgba(0,35,111,0.14), 0 2px 8px rgba(0,0,0,0.08) !important;
+}
+.stat-card-link:active {
+  transform: scale(0.97) !important;
+  box-shadow: none !important;
+}
+[data-theme="dark"] .stat-card-link:hover {
+  box-shadow: 0 8px 28px rgba(91,155,255,0.18), 0 2px 8px rgba(0,0,0,0.2) !important;
+}
 
 /* ── Task card ── */
 .task-card {
@@ -520,10 +536,10 @@ input[type=number] { appearance: textfield; -moz-appearance: textfield; }
 
 /* ── Sidebar width ── */
 .sidebar-collapsed { width: 72px;  min-width: 72px;  }
-.sidebar-expanded  { width: 240px; min-width: 240px; }
+.sidebar-expanded  { width: 260px; min-width: 260px; }
 
 @media (min-width: 900px) {
-  .sidebar-auto { width: 240px; min-width: 240px; }
+  .sidebar-auto { width: 260px; min-width: 260px; }
 }
 @media (max-width: 899px) {
   .sidebar-auto     { width: 72px; min-width: 72px; }
@@ -578,17 +594,47 @@ input[type=number] { appearance: textfield; -moz-appearance: textfield; }
   to   { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -600px 0; }
+  100% { background-position:  600px 0; }
+}
+
+.skeleton {
+  border-radius: 0.5rem;
+  background-color: var(--surface-variant);
+  background-image: linear-gradient(
+    90deg,
+    var(--surface-variant)   0%,
+    var(--skeleton-highlight) 40%,
+    var(--surface-variant)   80%
+  );
+  background-size: 600px 100%;
+  animation: shimmer 1.6s ease-in-out infinite;
+}
+
+:root {
+  --skeleton-highlight: color-mix(in srgb, var(--surface-variant) 60%, var(--brand) 40%);
+}
+[data-theme="dark"] {
+  --skeleton-highlight: color-mix(in srgb, var(--surface-variant) 55%, var(--brand) 45%);
+}
+
 /* ── Mobile breakpoint (< 768px) ── */
 @media (max-width: 767px) {
   /* Layout: hide sidebar, show bottom nav + safe-area spacer */
   .sidebar-auto       { display: none !important; }
   .bottom-nav         { display: flex !important; }
 
-  /* Spacer: min 50px so content always clears camera / Dynamic Island
-     On real devices env(safe-area-inset-top) will be 44-59px and takes precedence */
+  /* Spacer: only the real safe-area inset (notch/Dynamic Island).
+     Android without notch gets 0px — no wasted space. */
   .mobile-safe-spacer {
     display: block !important;
-    height: max(env(safe-area-inset-top), 50px) !important;
+    height: env(safe-area-inset-top, 0px) !important;
   }
 
   /* Topbar: fixed 60px below the spacer */
@@ -612,24 +658,34 @@ input[type=number] { appearance: textfield; -moz-appearance: textfield; }
   /* Page outer padding: tighter on small screens */
   .mobile-page-pad { padding: 1rem !important; }
 
-  /* Cards: tighter padding + no overflow */
+  /* Cards: tighter padding + no overflow + smaller text */
   .task-card, .courier-card {
-    padding: 0.875rem 1rem;
+    padding: 0.75rem 0.875rem;
     overflow: hidden;
     word-break: break-word;
+    font-size: 0.82rem;
   }
+  .task-card .font-bold  { font-size: 0.88rem; }
+  .task-card .font-black { font-size: 0.9rem; }
+
   .stat-card {
     padding: 0.875rem 1rem;
     overflow: hidden;
     word-break: break-word;
   }
 
-  /* Stat card label: slightly smaller on mobile */
-  .stat-card .label-sm { font-size: 0.6rem; }
+  /* Stat card label */
+  .stat-card .label-sm { font-size: 0.58rem; }
 
-  /* Stat card number: slightly smaller so it fits 1-col */
-  .stat-card [style*="font-size: '2rem'"],
-  .stat-card [style*="2rem"] { font-size: 1.7rem; }
+  /* Stat card number */
+  .stat-card [style*="2rem"] { font-size: 1.55rem !important; }
+
+  /* Global mobile font scale for page content */
+  .mobile-main p, .mobile-main span, .mobile-main div {
+    /* Prevent text overflow everywhere */
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
 
   /* Chat: full-bleed frame, exact viewport height
      spacer = max(env(safe-area-inset-top), 50px), topbar = 60px, bottomnav = 76px */

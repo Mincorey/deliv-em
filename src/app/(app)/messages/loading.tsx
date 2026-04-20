@@ -1,18 +1,22 @@
+import { Skeleton } from '@/components/ui/Skeleton'
+
 export default function MessagesLoading() {
   return (
-    <div className="p-6 max-w-2xl mx-auto animate-pulse">
-      <div className="h-6 w-32 rounded bg-[var(--surface-variant)] mb-1" />
-      <div className="h-3 w-48 rounded bg-[var(--surface-variant)] mb-5" />
+    <div className="p-6 max-w-2xl mx-auto">
+      <Skeleton style={{ height: 22, width: 128, marginBottom: 8 }} />
+      <Skeleton style={{ height: 12, width: 192, marginBottom: 20 }} />
 
       <div className="flex flex-col gap-3">
         {[...Array(5)].map((_, i) => (
-          <div key={i} className="glass rounded-2xl p-4 flex items-center gap-3 h-20">
-            <div className="w-10 h-10 rounded-full bg-[var(--surface-variant)] flex-shrink-0" />
-            <div className="flex-1 flex flex-col gap-2">
-              <div className="h-4 w-36 rounded bg-[var(--surface-variant)]" />
-              <div className="h-3 w-52 rounded bg-[var(--surface-variant)]" />
+          <div key={i} className="rounded-2xl p-4 flex items-center gap-3" style={{ background: 'var(--surface)', border: '1.5px solid var(--border)' }}>
+            <Skeleton circle style={{ width: 40, height: 40, flexShrink: 0 }} />
+            <div className="flex-1 flex flex-col gap-2 min-w-0">
+              <div className="flex items-center justify-between gap-2">
+                <Skeleton style={{ height: 14, width: 144 }} />
+                <Skeleton style={{ height: 11, width: 40 }} />
+              </div>
+              <Skeleton style={{ height: 12, width: 210 }} />
             </div>
-            <div className="h-3 w-10 rounded bg-[var(--surface-variant)]" />
           </div>
         ))}
       </div>

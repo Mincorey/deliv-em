@@ -20,6 +20,7 @@ const NAV_CUSTOMER: NavItem[] = [
   { href: '/favorites',    icon: 'favorite',              label: 'Избранные' },
   { href: '/messages',     icon: 'chat_bubble',           label: 'Сообщения' },
   { href: '/wallet',       icon: 'account_balance_wallet',label: 'Кошелёк' },
+  { href: '/ratings',      icon: 'leaderboard',           label: 'Рейтинги' },
   { href: '/about',        icon: 'info',                  label: 'О сервисе' },
   { href: '/contacts',     icon: 'support_agent',         label: 'Контакты' },
 ]
@@ -31,6 +32,7 @@ const NAV_COURIER: NavItem[] = [
   { href: '/orders',    icon: 'history',      label: 'Архив' },
   { href: '/favorites', icon: 'favorite',     label: 'Избранные заказчики' },
   { href: '/messages',  icon: 'chat_bubble',  label: 'Сообщения' },
+  { href: '/ratings',   icon: 'leaderboard',  label: 'Рейтинги' },
   { href: '/about',     icon: 'info',         label: 'О сервисе' },
   { href: '/contacts',  icon: 'support_agent',label: 'Контакты' },
 ]

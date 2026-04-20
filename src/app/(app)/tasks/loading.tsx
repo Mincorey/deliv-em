@@ -1,21 +1,33 @@
+import { Skeleton } from '@/components/ui/Skeleton'
+
 export default function TasksLoading() {
   return (
-    <div className="p-6 max-w-4xl mx-auto animate-pulse">
-      <div className="flex items-center justify-between mb-1">
-        <div className="h-6 w-44 rounded bg-[var(--surface-variant)]" />
-        <div className="h-9 w-24 rounded-full bg-[var(--surface-variant)]" />
+    <div className="p-6 max-w-4xl mx-auto">
+      <div className="flex items-center justify-between mb-2">
+        <Skeleton style={{ height: 22, width: 176 }} />
+        <Skeleton style={{ height: 34, width: 96, borderRadius: 9999 }} />
       </div>
-      <div className="h-3 w-56 rounded bg-[var(--surface-variant)] mb-5" />
+      <Skeleton style={{ height: 12, width: 220, marginBottom: 20 }} />
 
-      {/* Filter bar skeleton */}
-      <div className="glass rounded-2xl p-4 mb-5 flex gap-3">
-        <div className="h-9 w-28 rounded-full bg-[var(--surface-variant)]" />
-        <div className="h-9 w-24 rounded-full bg-[var(--surface-variant)]" />
+      {/* Filter bar */}
+      <div className="rounded-2xl p-4 mb-5 flex gap-3" style={{ background: 'var(--surface)', border: '1.5px solid var(--border)' }}>
+        <Skeleton style={{ height: 34, width: 110, borderRadius: 9999 }} />
+        <Skeleton style={{ height: 34, width: 96, borderRadius: 9999 }} />
       </div>
 
       <div className="flex flex-col gap-3">
         {[...Array(4)].map((_, i) => (
-          <div key={i} className="glass rounded-2xl p-4 h-28" />
+          <div key={i} className="rounded-2xl p-4" style={{ background: 'var(--surface)', border: '1.5px solid var(--border)' }}>
+            <div className="flex items-start justify-between gap-3 mb-3">
+              <Skeleton style={{ height: 16, width: 220 }} />
+              <Skeleton style={{ height: 22, width: 68, borderRadius: 9999 }} />
+            </div>
+            <div className="flex gap-3 mb-2">
+              <Skeleton style={{ height: 12, width: 100 }} />
+              <Skeleton style={{ height: 12, width: 80 }} />
+            </div>
+            <Skeleton style={{ height: 12, width: 140 }} />
+          </div>
         ))}
       </div>
     </div>

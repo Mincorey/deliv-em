@@ -3,18 +3,20 @@ import Link from 'next/link'
 import { Suspense } from 'react'
 import { createClient } from '@/lib/supabase/server'
 import { TaskCard } from '@/components/tasks/TaskCard'
-import { FeedFilters } from './FeedFilters'
+import { CourierFeed } from './CourierFeed'
+import { AnimatedPage, AnimatedItem, AnimatedList } from '@/components/ui/Animated'
 import type { TaskWithProfiles } from '@/lib/types'
 
 export default async function TasksPage({
   searchParams,
 }: {
-  searchParams: Promise<{ type?: string; city?: string; min_reward?: string }>
+  searchParams: Promise<{
+    type?: string; city?: string; min_reward?: string; max_reward?: string
+    urgent?: string; sort?: string; filter?: string
+  }>
 }) {
   const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/auth')
 
   const { data: profile } = await supabase
@@ -26,51 +28,93 @@ export default async function TasksPage({
   const params = await searchParams
 
   if (profile?.role === 'courier') {
-    return <CourierFeed userId={user.id} params={params} />
+    const feedKey = [params.type, params.city, params.min_reward, params.max_reward, params.urgent, params.sort].join('-')
+    return (
+      <Suspense fallback={null}>
+        <CourierFeed
+          key={feedKey}
+          userId={user.id}
+          initialType={params.type}
+          initialCity={params.city}
+          initialMinReward={params.min_reward}
+          initialMaxReward={params.max_reward}
+          initialUrgent={params.urgent}
+          initialSort={params.sort}
+        />
+      </Suspense>
+    )
   }
 
-  return <CustomerActiveTasks userId={user.id} />
+  return <CustomerActiveTasks userId={user.id} highlightFilter={params.filter} />
 }
 
-async function CustomerActiveTasks({ userId }: { userId: string }) {
+async function CustomerActiveTasks({ userId, highlightFilter }: { userId: string; highlightFilter?: string }) {
   const supabase = await createClient()
 
   const { data: tasks } = await supabase
     .from('tasks')
-    .select(
-      `*, customer:profiles!tasks_customer_id_fkey(*), courier:profiles!tasks_courier_id_fkey(*)`
-    )
+    .select(`*, customer:profiles!tasks_customer_id_fkey(*), courier:profiles!tasks_courier_id_fkey(*)`)
     .eq('customer_id', userId)
-    .in('status', ['published', 'matched', 'in_progress'])
+    .in('status', ['published', 'matched', 'in_progress', 'awaiting_confirmation'])
     .order('created_at', { ascending: false })
+    .limit(50)
+
+  // If filter=awaiting_confirmation — show those first
+  const sorted = highlightFilter === 'awaiting_confirmation' && tasks
+    ? [...tasks].sort((a, b) =>
+        (a.status === 'awaiting_confirmation' ? 0 : 1) - (b.status === 'awaiting_confirmation' ? 0 : 1))
+    : tasks
+
+  const pendingCount = tasks?.filter(t => t.status === 'awaiting_confirmation').length ?? 0
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
-      <div className="flex items-center justify-between mb-1 page-header">
+    <AnimatedPage className="p-6 max-w-4xl mx-auto">
+      <AnimatedItem className="flex items-center justify-between mb-1 page-header">
         <h2 className="text-xl font-bold">Активные поручения</h2>
         <Link href="/tasks/create">
           <button className="btn-green text-sm">
             <span className="material-symbols-outlined text-base">add</span> Создать
           </button>
         </Link>
-      </div>
-      <p className="text-sm mb-5" style={{ color: 'var(--text-3)' }}>
-        Поручения, которые выполняются прямо сейчас
-      </p>
+      </AnimatedItem>
+      <AnimatedItem>
+        <p className="text-sm mb-5" style={{ color: 'var(--text-3)' }}>
+          Поручения, которые выполняются прямо сейчас
+        </p>
+      </AnimatedItem>
 
-      {(tasks?.length ?? 0) > 0 ? (
-        <div className="flex flex-col gap-4">
-          {tasks!.map((task) => (
-            <TaskCard
-              key={task.id}
-              task={task as unknown as TaskWithProfiles}
-              showCourier
-              currentUserId={userId}
-            />
+      {pendingCount > 0 && (
+        <AnimatedItem>
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 10, marginBottom: '1.25rem',
+            padding: '10px 16px',
+            background: 'rgba(245,158,11,0.08)', border: '1.5px solid rgba(245,158,11,0.35)',
+            borderRadius: '0.875rem',
+          }}>
+            <span className="material-symbols-outlined fill-icon" style={{ color: '#f59e0b', fontSize: 20 }}>task_alt</span>
+            <p style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-1)' }}>
+              {pendingCount === 1
+                ? 'Одно поручение ожидает вашего подтверждения'
+                : `${pendingCount} поручения ожидают вашего подтверждения`}
+            </p>
+          </div>
+        </AnimatedItem>
+      )}
+
+      {(sorted?.length ?? 0) > 0 ? (
+        <AnimatedList className="flex flex-col gap-4">
+          {sorted!.map((task) => (
+            <AnimatedItem key={task.id}>
+              <TaskCard
+                task={task as unknown as TaskWithProfiles}
+                showCourier
+                currentUserId={userId}
+              />
+            </AnimatedItem>
           ))}
-        </div>
+        </AnimatedList>
       ) : (
-        <div className="text-center py-16">
+        <AnimatedItem className="text-center py-16">
           <span className="material-symbols-outlined icon-float" style={{ fontSize: '4rem', color: 'var(--text-3)' }}>
             rocket_launch
           </span>
@@ -84,71 +128,8 @@ async function CustomerActiveTasks({ userId }: { userId: string }) {
               Создать поручение
             </button>
           </Link>
-        </div>
+        </AnimatedItem>
       )}
-    </div>
-  )
-}
-
-async function CourierFeed({
-  userId,
-  params,
-}: {
-  userId: string
-  params: { type?: string; city?: string; min_reward?: string }
-}) {
-  const supabase = await createClient()
-
-  let query = supabase
-    .from('tasks')
-    .select(
-      `*, customer:profiles!tasks_customer_id_fkey(*), courier:profiles!tasks_courier_id_fkey(*)`
-    )
-    .eq('status', 'published')
-    .neq('customer_id', userId)
-    .order('created_at', { ascending: false })
-
-  if (params.type && params.type !== 'all') {
-    query = query.eq('task_type', params.type)
-  }
-  if (params.min_reward) {
-    query = query.gte('reward', parseInt(params.min_reward))
-  }
-
-  const { data: tasks } = await query
-
-  return (
-    <div className="p-6 max-w-4xl mx-auto">
-      <h2 className="text-xl font-bold mb-1 page-header">Поиск заданий</h2>
-      <p className="text-sm mb-4" style={{ color: 'var(--text-3)' }}>
-        Свободные поручения от заказчиков
-      </p>
-
-      <Suspense fallback={null}>
-        <FeedFilters currentType={params.type} currentMinReward={params.min_reward} />
-      </Suspense>
-
-      {(tasks?.length ?? 0) > 0 ? (
-        <div className="flex flex-col gap-3">
-          {tasks!.map((task) => (
-            <TaskCard
-              key={task.id}
-              task={task as unknown as TaskWithProfiles}
-              showCustomer
-            />
-          ))}
-        </div>
-      ) : (
-        <div className="text-center py-16">
-          <span className="material-symbols-outlined icon-float" style={{ fontSize: '4rem', color: 'var(--text-3)' }}>
-            search
-          </span>
-          <p className="font-bold mt-3" style={{ color: 'var(--text-2)' }}>Нет доступных заданий</p>
-          <p className="text-sm mt-1" style={{ color: 'var(--text-3)' }}>
-            Попробуйте изменить фильтры или вернитесь позже
-          </p>
-        </div>
-      )}
-    </div>
+    </AnimatedPage>
   )
 }

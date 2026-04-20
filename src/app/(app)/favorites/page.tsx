@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { Avatar } from '@/components/ui/Avatar'
+import { AnimatedPage, AnimatedItem, AnimatedList } from '@/components/ui/Animated'
 import { TRANSPORT_META } from '@/lib/types'
 import type { Profile, CourierProfile } from '@/lib/types'
 
@@ -21,11 +22,13 @@ export default async function FavoritesPage() {
     const couriers = (favs ?? []).map((f) => f.courier) as unknown as (Profile & { courier_profile: CourierProfile | null })[]
 
     return (
-      <div className="p-6 max-w-4xl mx-auto">
-        <h2 className="text-xl font-bold mb-1 page-header" style={{ color: 'var(--text-1)' }}>Избранные курьеры</h2>
-        <p className="text-sm mb-5" style={{ color: 'var(--text-3)' }}>Курьеры, которых вы добавили в избранное</p>
+      <AnimatedPage className="p-6 max-w-4xl mx-auto">
+        <AnimatedItem>
+          <h2 className="text-xl font-bold mb-1 page-header" style={{ color: 'var(--text-1)' }}>Избранные курьеры</h2>
+          <p className="text-sm mb-5" style={{ color: 'var(--text-3)' }}>Курьеры, которых вы добавили в избранное</p>
+        </AnimatedItem>
         <FavoriteList people={couriers} role="courier" />
-      </div>
+      </AnimatedPage>
     )
   }
 
@@ -37,11 +40,13 @@ export default async function FavoritesPage() {
   const customers = (favs ?? []).map((f) => f.customer) as unknown as Profile[]
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
-      <h2 className="text-xl font-bold mb-1" style={{ color: 'var(--text-1)' }}>Избранные заказчики</h2>
-      <p className="text-sm mb-5" style={{ color: 'var(--text-3)' }}>Заказчики, которых вы добавили в избранное</p>
+    <AnimatedPage className="p-6 max-w-4xl mx-auto">
+      <AnimatedItem>
+        <h2 className="text-xl font-bold mb-1 page-header" style={{ color: 'var(--text-1)' }}>Избранные заказчики</h2>
+        <p className="text-sm mb-5" style={{ color: 'var(--text-3)' }}>Заказчики, которых вы добавили в избранное</p>
+      </AnimatedItem>
       <FavoriteList people={customers} role="customer" />
-    </div>
+    </AnimatedPage>
   )
 }
 
@@ -69,7 +74,7 @@ function FavoriteList({
   }
 
   return (
-    <div className="flex flex-col gap-3">
+    <AnimatedList className="flex flex-col gap-3">
       {people.map((person) => {
         const cp = person.courier_profile
         const transport = cp?.transport_type ? TRANSPORT_META[cp.transport_type] : null
@@ -99,6 +104,6 @@ function FavoriteList({
           </div>
         )
       })}
-    </div>
+    </AnimatedList>
   )
 }

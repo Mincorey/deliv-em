@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { Avatar } from '@/components/ui/Avatar'
+import { AnimatedPage, AnimatedItem, AnimatedList } from '@/components/ui/Animated'
 
 interface TaskRow {
   id: string
@@ -75,19 +76,21 @@ export default function MessagesPage() {
   )
 
   return (
-    <div style={{ display: 'flex', height: 'calc(100vh - 56px)', flexDirection: 'column', maxWidth: 800, margin: '0 auto', padding: '24px 24px 0' }}>
-      <h2 className="text-xl font-bold mb-5 page-header">Сообщения</h2>
+    <AnimatedPage style={{ display: 'flex', height: 'calc(100vh - 56px)', flexDirection: 'column', maxWidth: 800, margin: '0 auto', padding: '24px 24px 0' }}>
+      <AnimatedItem>
+        <h2 className="text-xl font-bold mb-5 page-header">Сообщения</h2>
+      </AnimatedItem>
 
       {tasks.length === 0 ? (
-        <div className="text-center py-16">
+        <AnimatedItem className="text-center py-16">
           <span className="material-symbols-outlined icon-float" style={{ fontSize: '4rem', color: 'var(--text-3)' }}>chat_bubble</span>
           <p className="font-bold mt-3" style={{ color: 'var(--text-2)' }}>Нет переписок</p>
           <p className="text-sm mt-1" style={{ color: 'var(--text-3)' }}>
             Чаты открываются автоматически, когда курьер принимает поручение
           </p>
-        </div>
+        </AnimatedItem>
       ) : (
-        <div className="flex flex-col gap-2">
+        <AnimatedList className="flex flex-col gap-2">
           {tasks.map((task) => {
             const lastMsg = lastMsgMap.get(task.id)
             const partner = task.customer?.id === userId ? task.courier : task.customer
@@ -95,9 +98,9 @@ export default function MessagesPage() {
             const unread = lastMsg && !lastMsg.is_read && lastMsg.sender_id !== userId
 
             return (
-              <div
+              <AnimatedItem
                 key={task.id}
-                className="flex items-center gap-3 p-4 rounded-2xl card-enter"
+                className="flex items-center gap-3 p-4 rounded-2xl"
                 style={{
                   background: unread ? 'var(--brand-soft)' : 'var(--surface)',
                   border: '1.5px solid ' + (unread ? 'var(--brand)' : 'var(--border)'),
@@ -132,11 +135,11 @@ export default function MessagesPage() {
                 </Link>
 
                 {unread && <div style={{ width: 8, height: 8, borderRadius: 9999, background: 'var(--green)', flexShrink: 0 }} />}
-              </div>
+              </AnimatedItem>
             )
           })}
-        </div>
+        </AnimatedList>
       )}
-    </div>
+    </AnimatedPage>
   )
 }

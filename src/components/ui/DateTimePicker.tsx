@@ -146,7 +146,7 @@ export default function DateTimePicker({
     background: 'var(--surface-alt)',
     border: '1.5px solid var(--border)',
     borderRadius: '0.75rem',
-    padding: '6px 10px',
+    padding: '6px 36px 6px 10px',
     color: 'var(--text-1)',
     fontWeight: 600,
     fontSize: '0.9rem',

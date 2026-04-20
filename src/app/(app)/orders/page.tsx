@@ -1,80 +1,99 @@
-import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+'use client'
+
+import { useEffect, useState, useCallback } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
 import { TaskCard } from '@/components/tasks/TaskCard'
-import type { TaskWithProfiles, TaskStatus } from '@/lib/types'
+import { AnimatedPage, AnimatedItem, AnimatedList } from '@/components/ui/Animated'
+import type { TaskWithProfiles } from '@/lib/types'
 
-export default async function OrdersPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ filter?: string }>
-}) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/auth')
+type Filter = 'all' | 'completed' | 'cancelled'
 
-  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
-  const params = await searchParams
-  const filter = params.filter ?? 'all'
+const FILTERS: { value: Filter; label: string; cls: string }[] = [
+  { value: 'all',       label: 'Все',       cls: 'badge-blue' },
+  { value: 'completed', label: 'Выполнены', cls: 'badge-green' },
+  { value: 'cancelled', label: 'Отменены',  cls: 'badge-red' },
+]
 
-  let statusFilter: TaskStatus[] = ['completed', 'cancelled']
-  if (filter === 'completed') statusFilter = ['completed']
-  if (filter === 'cancelled') statusFilter = ['cancelled']
+export default function OrdersPage() {
+  const router      = useRouter()
+  const searchParams = useSearchParams()
+  const supabase    = createClient()
 
-  const isCustomer = profile?.role === 'customer'
+  const [tasks,      setTasks]      = useState<TaskWithProfiles[]>([])
+  const [isCustomer, setIsCustomer] = useState(true)
+  const [loading,    setLoading]    = useState(true)
+  const [filter,     setFilter]     = useState<Filter>((searchParams.get('filter') as Filter) ?? 'all')
 
-  let query = supabase
-    .from('tasks')
-    .select(`*, customer:profiles!tasks_customer_id_fkey(*), courier:profiles!tasks_courier_id_fkey(*)`)
-    .in('status', statusFilter)
-    .order('created_at', { ascending: false })
+  useEffect(() => {
+    async function load() {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) { router.push('/auth'); return }
 
-  if (isCustomer) { query = query.eq('customer_id', user.id) }
-  else             { query = query.eq('courier_id', user.id) }
+      const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+      const customer = profile?.role === 'customer'
+      setIsCustomer(customer)
 
-  const { data: tasks } = await query
+      const q = supabase
+        .from('tasks')
+        .select(`*, customer:profiles!tasks_customer_id_fkey(*), courier:profiles!tasks_courier_id_fkey(*)`)
+        .in('status', ['completed', 'cancelled'])
+        .order('created_at', { ascending: false })
 
-  const filters = [
-    { value: 'all',       label: 'Все',       cls: 'badge-blue' },
-    { value: 'completed', label: 'Выполнены', cls: 'badge-green' },
-    { value: 'cancelled', label: 'Отменены',  cls: 'badge-red' },
-  ]
+      const { data } = await (customer ? q.eq('customer_id', user.id) : q.eq('courier_id', user.id))
+      setTasks((data ?? []) as unknown as TaskWithProfiles[])
+      setLoading(false)
+    }
+    load()
+  }, [])
+
+  const visible = filter === 'all'
+    ? tasks
+    : tasks.filter((t) => t.status === filter)
+
+  const handleFilter = useCallback((f: Filter) => {
+    setFilter(f)
+    router.replace(`/orders?filter=${f}`, { scroll: false })
+  }, [router])
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
-      <h2 className="text-xl font-bold mb-1 page-header" style={{ color: 'var(--text-1)' }}>Архив поручений</h2>
-      <p className="text-sm mb-5" style={{ color: 'var(--text-3)' }}>Все ваши завершённые и отменённые поручения</p>
-
-      <div className="orders-filters flex gap-2 mb-5 pb-1">
-        {filters.map((f) => (
-          <a
-            key={f.value}
-            href={`/orders?filter=${f.value}`}
-            className={`filter-btn badge cursor-pointer ${filter === f.value ? f.cls : 'badge-gray'}`}
-            style={{ padding: '6px 14px' }}
-          >
-            {f.label}
-          </a>
-        ))}
-      </div>
-
-      {(tasks?.length ?? 0) > 0 ? (
-        <div className="flex flex-col gap-3">
-          {tasks!.map((task) => (
-            <TaskCard
-              key={task.id}
-              task={task as unknown as TaskWithProfiles}
-              showCourier={isCustomer}
-              showCustomer={!isCustomer}
-            />
+    <AnimatedPage className="p-6 max-w-4xl mx-auto">
+      <AnimatedItem>
+        <h2 className="text-xl font-bold mb-1 page-header" style={{ color: 'var(--text-1)' }}>Архив поручений</h2>
+        <p className="text-sm mb-5" style={{ color: 'var(--text-3)' }}>Все ваши завершённые и отменённые поручения</p>
+        <div className="orders-filters flex gap-2 mb-5 pb-1">
+          {FILTERS.map((f) => (
+            <button
+              key={f.value}
+              onClick={() => handleFilter(f.value)}
+              className={`filter-btn badge cursor-pointer ${filter === f.value ? f.cls : 'badge-gray'}`}
+              style={{ padding: '6px 14px', border: 'none' }}
+            >
+              {f.label}
+            </button>
           ))}
         </div>
+      </AnimatedItem>
+
+      {loading ? (
+        <div className="flex justify-center py-20">
+          <span className="material-symbols-outlined animate-spin" style={{ fontSize: 32, color: 'var(--text-4)' }}>progress_activity</span>
+        </div>
+      ) : visible.length > 0 ? (
+        <AnimatedList className="flex flex-col gap-3">
+          {visible.map((task) => (
+            <AnimatedItem key={task.id}>
+              <TaskCard task={task} showCourier={isCustomer} showCustomer={!isCustomer} />
+            </AnimatedItem>
+          ))}
+        </AnimatedList>
       ) : (
-        <div className="text-center py-16">
+        <AnimatedItem className="text-center py-16">
           <span className="material-symbols-outlined icon-float" style={{ fontSize: '4rem', color: 'var(--text-3)' }}>history</span>
           <p className="font-bold mt-3" style={{ color: 'var(--text-2)' }}>Архив пуст</p>
           <p className="text-sm mt-1" style={{ color: 'var(--text-3)' }}>Завершённые поручения появятся здесь</p>
-        </div>
+        </AnimatedItem>
       )}
-    </div>
+    </AnimatedPage>
   )
 }

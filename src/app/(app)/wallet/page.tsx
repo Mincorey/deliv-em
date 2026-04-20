@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useToast } from '@/components/ui/Toast'
 import { topUpWallet } from './actions'
+import { AnimatedPage, AnimatedItem } from '@/components/ui/Animated'
 import type { Transaction, Profile } from '@/lib/types'
 
 const QUICK_AMOUNTS = [200, 500, 1000]
@@ -82,11 +83,13 @@ export default function WalletPage() {
   }
 
   return (
-    <div className="p-6 max-w-2xl mx-auto">
-      <h2 className="text-xl font-bold mb-5 page-header" style={{ color: 'var(--text-1)' }}>Кошелёк</h2>
+    <AnimatedPage className="p-6 max-w-2xl mx-auto">
+      <AnimatedItem>
+        <h2 className="text-xl font-bold mb-5 page-header" style={{ color: 'var(--text-1)' }}>Кошелёк</h2>
+      </AnimatedItem>
 
       {/* Balance card */}
-      <div className="rounded-2xl p-7 mb-5 relative overflow-hidden" style={{ background: 'linear-gradient(135deg,#00236f 0%,#006c49 100%)' }}>
+      <AnimatedItem className="rounded-2xl p-7 mb-5 relative overflow-hidden" style={{ background: 'linear-gradient(135deg,#00236f 0%,#006c49 100%)' }}>
         <div className="absolute" style={{ opacity: 0.1, right: -30, top: -30, color: '#fff' }}>
           <span className="material-symbols-outlined" style={{ fontSize: '9rem' }}>account_balance_wallet</span>
         </div>
@@ -96,10 +99,10 @@ export default function WalletPage() {
           <span className="text-white font-bold text-xl mb-1">₽</span>
         </div>
         <p className="text-white text-xs mt-1" style={{ opacity: 0.6 }}>Deliv&apos;em · Внутренний кошелёк</p>
-      </div>
+      </AnimatedItem>
 
       {/* Top-up */}
-      <div className="p-5 mb-4" style={card}>
+      <AnimatedItem className="p-5 mb-4" style={card}>
         <h3 className="font-bold mb-3" style={{ color: 'var(--text-1)' }}>Пополнить через AnyPay</h3>
         <div className="grid grid-cols-3 gap-2 mb-4">
           {QUICK_AMOUNTS.map((a) => (
@@ -131,10 +134,10 @@ export default function WalletPage() {
           </button>
         </div>
         <p className="text-xs mt-2" style={{ color: 'var(--text-4)' }}>Оплата через AnyPay · Безопасно</p>
-      </div>
+      </AnimatedItem>
 
       {/* History */}
-      <div className="p-5" style={card}>
+      <AnimatedItem className="p-5" style={card}>
         <h3 className="font-bold mb-3" style={{ color: 'var(--text-1)' }}>История операций</h3>
         {transactions.length === 0 ? (
           <p className="text-sm text-center py-6" style={{ color: 'var(--text-3)' }}>Операций пока нет</p>
@@ -176,7 +179,7 @@ export default function WalletPage() {
             })}
           </div>
         )}
-      </div>
-    </div>
+      </AnimatedItem>
+    </AnimatedPage>
   )
 }

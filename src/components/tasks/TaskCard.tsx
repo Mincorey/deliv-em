@@ -34,7 +34,7 @@ export function TaskCard({ task, showCourier, showCustomer, currentUserId }: Tas
           <div
             style={{
               width: 40, height: 40, borderRadius: '0.75rem', flexShrink: 0,
-              background: 'var(--surface-variant)',
+              background: typeMeta.bg,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}
           >

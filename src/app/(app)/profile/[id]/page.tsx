@@ -4,10 +4,17 @@ import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { TRANSPORT_META } from '@/lib/types'
-import type { Profile, CourierProfile } from '@/lib/types'
+import type { Profile, CourierProfile, Rating } from '@/lib/types'
+import { AnimatedPage, AnimatedItem } from '@/components/ui/Animated'
+
+type RatingWithAuthor = Rating & { from_user: Pick<Profile, 'full_name' | 'avatar_url'> }
 
 function pad2(n: number) { return String(n).padStart(2, '0') }
 function formatJoined(iso: string) {
+  const d = new Date(iso)
+  return `${pad2(d.getDate())}.${pad2(d.getMonth() + 1)}.${d.getFullYear()}`
+}
+function formatReviewDate(iso: string) {
   const d = new Date(iso)
   return `${pad2(d.getDate())}.${pad2(d.getMonth() + 1)}.${d.getFullYear()}`
 }
@@ -19,6 +26,19 @@ function calcAge(isoDate: string) {
   return age
 }
 
+function StarRow({ score }: { score: number }) {
+  return (
+    <div className="flex items-center gap-0.5">
+      {[1,2,3,4,5].map(i => (
+        <span key={i} className="material-symbols-outlined fill-icon" style={{
+          fontSize: 15,
+          color: i <= score ? '#f59e0b' : 'var(--border)',
+        }}>star</span>
+      ))}
+    </div>
+  )
+}
+
 export default function PublicProfilePage() {
   const params   = useParams()
   const router   = useRouter()
@@ -26,6 +46,7 @@ export default function PublicProfilePage() {
 
   const [profile,        setProfile]        = useState<Profile | null>(null)
   const [courierProfile, setCourierProfile] = useState<CourierProfile | null>(null)
+  const [ratings,        setRatings]        = useState<RatingWithAuthor[]>([])
   const [loading,        setLoading]        = useState(true)
   const [notFound,       setNotFound]       = useState(false)
 
@@ -37,17 +58,27 @@ export default function PublicProfilePage() {
       // Redirect own profile to settings
       if (params.id === user.id) { router.replace('/profile'); return }
 
+      // Use RPC to get privacy-masked profile — phone/bio/birth_date
+      // are nulled out server-side when the owner has disabled them
       const { data: prof } = await supabase
-        .from('profiles').select('*').eq('id', params.id as string).single()
+        .rpc('get_public_profile', { target_id: params.id as string })
 
       if (!prof) { setNotFound(true); setLoading(false); return }
       setProfile(prof as Profile)
 
-      if (prof.role === 'courier') {
-        const { data: cp } = await supabase
-          .from('courier_profiles').select('*').eq('id', params.id as string).single()
-        if (cp) setCourierProfile(cp as CourierProfile)
-      }
+      const [cpRes, ratingsRes] = await Promise.all([
+        prof.role === 'courier'
+          ? supabase.from('courier_profiles').select('*').eq('id', params.id as string).single()
+          : Promise.resolve({ data: null }),
+        supabase.from('ratings')
+          .select('*, from_user:profiles!ratings_from_user_id_fkey(full_name, avatar_url)')
+          .eq('to_user_id', params.id as string)
+          .order('created_at', { ascending: false })
+          .limit(30),
+      ])
+
+      if (cpRes.data) setCourierProfile(cpRes.data as CourierProfile)
+      if (ratingsRes.data) setRatings(ratingsRes.data as unknown as RatingWithAuthor[])
       setLoading(false)
     }
     load()
@@ -73,20 +104,25 @@ export default function PublicProfilePage() {
   const transport = courierProfile ? TRANSPORT_META[courierProfile.transport_type] : null
   const hasVehicle = courierProfile && courierProfile.transport_type !== 'foot'
 
+  // Compute average rating from fetched reviews (source of truth, not the cached DB field)
+  const avgRating = ratings.length > 0
+    ? Math.round(ratings.reduce((s, r) => s + r.score, 0) / ratings.length * 10) / 10
+    : null
+
   return (
-    <div className="p-6 max-w-2xl mx-auto">
+    <AnimatedPage className="p-6 max-w-2xl mx-auto">
       {/* Back */}
-      <button
+      <AnimatedItem><button
         onClick={() => router.back()}
         className="flex items-center gap-2 mb-5"
         style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-3)', fontWeight: 600, fontSize: '0.9rem', padding: 0 }}
       >
         <span className="material-symbols-outlined" style={{ fontSize: 20 }}>arrow_back</span>
         Назад
-      </button>
+      </button></AnimatedItem>
 
       {/* Hero card */}
-      <div className="rounded-2xl mb-4" style={{ background: 'var(--surface)', border: '1.5px solid var(--border)', boxShadow: 'var(--shadow-sm)', overflow: 'hidden' }}>
+      <AnimatedItem className="rounded-2xl mb-4" style={{ background: 'var(--surface)', border: '1.5px solid var(--border)', boxShadow: 'var(--shadow-sm)', overflow: 'hidden' }}>
 
         {/* Banner + avatar row */}
         <div style={{
@@ -126,10 +162,19 @@ export default function PublicProfilePage() {
 
         {/* Content — top padding makes room for the avatar */}
         <div style={{ padding: '44px 1.5rem 1.5rem' }}>
-          <div className="flex items-center gap-2 flex-wrap mb-1">
-            <h2 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-1)' }}>{p.full_name}</h2>
-            {p.is_verified && (
-              <span className="material-symbols-outlined fill-icon" style={{ fontSize: 18, color: 'var(--green)' }} title="Верифицирован">verified</span>
+          <div className="flex items-start justify-between gap-2 mb-1">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h2 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-1)' }}>{p.full_name}</h2>
+              {p.is_verified && (
+                <span className="material-symbols-outlined fill-icon" style={{ fontSize: 18, color: 'var(--green)' }} title="Верифицирован">verified</span>
+              )}
+            </div>
+            {avgRating !== null && (
+              <div className="flex items-center gap-1 flex-shrink-0">
+                <span className="material-symbols-outlined fill-icon" style={{ fontSize: 18, color: '#f59e0b' }}>star</span>
+                <span style={{ fontSize: '1rem', fontWeight: 800, color: '#f59e0b' }}>{avgRating.toFixed(1)}</span>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-4)', marginLeft: 2 }}>({ratings.length})</span>
+              </div>
             )}
           </div>
 
@@ -166,25 +211,25 @@ export default function PublicProfilePage() {
               </a>
             )}
         </div>
-      </div>
+      </AnimatedItem>
 
       {/* Bio */}
       {privacy.show_bio && p.bio && (
-        <div className="rounded-2xl p-5 mb-4" style={{ background: 'var(--surface)', border: '1.5px solid var(--border)', boxShadow: 'var(--shadow-sm)' }}>
+        <AnimatedItem className="rounded-2xl p-5 mb-4" style={{ background: 'var(--surface)', border: '1.5px solid var(--border)', boxShadow: 'var(--shadow-sm)' }}>
           <p className="label-sm mb-2">О себе</p>
           <p style={{ fontSize: '0.9rem', color: 'var(--text-2)', lineHeight: 1.65 }}>{p.bio}</p>
-        </div>
+        </AnimatedItem>
       )}
 
       {/* Courier stats block */}
       {courierProfile && (
-        <div className="rounded-2xl p-5 mb-4" style={{ background: 'var(--surface)', border: '1.5px solid var(--border)', boxShadow: 'var(--shadow-sm)' }}>
+        <AnimatedItem className="rounded-2xl p-5 mb-4" style={{ background: 'var(--surface)', border: '1.5px solid var(--border)', boxShadow: 'var(--shadow-sm)' }}>
           <p className="label-sm mb-3">Статистика курьера</p>
 
           {/* Stats row */}
           <div className="rounded-xl p-4 flex gap-4 mb-4" style={{ background: 'var(--surface-alt)', border: '1.5px solid var(--border)' }}>
             <div className="text-center flex-1">
-              <p style={{ fontSize: '1.75rem', fontWeight: 900, color: '#f59e0b', lineHeight: 1 }}>{courierProfile.rating?.toFixed(1) ?? '—'}</p>
+              <p style={{ fontSize: '1.75rem', fontWeight: 900, color: '#f59e0b', lineHeight: 1 }}>{avgRating !== null ? avgRating.toFixed(1) : '—'}</p>
               <p className="text-xs mt-1" style={{ color: 'var(--text-3)' }}>Рейтинг</p>
             </div>
             <div className="text-center flex-1" style={{ borderLeft: '1px solid var(--border)', borderRight: '1px solid var(--border)' }}>
@@ -199,20 +244,6 @@ export default function PublicProfilePage() {
 
           {/* Tags row */}
           <div className="flex items-center gap-2 flex-wrap">
-            {/* Availability */}
-            <div className="flex items-center gap-2 rounded-full px-3 py-1.5" style={{
-              background: courierProfile.is_available ? 'rgba(45,212,160,0.1)' : 'var(--surface-variant)',
-              border: `1.5px solid ${courierProfile.is_available ? 'rgba(45,212,160,0.3)' : 'var(--border)'}`,
-            }}>
-              <div style={{
-                width: 7, height: 7, borderRadius: 9999,
-                background: courierProfile.is_available ? 'var(--green)' : 'var(--text-4)',
-              }} />
-              <span style={{ fontSize: '0.8rem', fontWeight: 600, color: courierProfile.is_available ? 'var(--green)' : 'var(--text-3)' }}>
-                {courierProfile.is_available ? 'Доступен' : 'Недоступен'}
-              </span>
-            </div>
-
             {/* Transport */}
             {hasVehicle && transport && (
               <div className="flex items-center gap-2 rounded-full px-3 py-1.5" style={{ background: 'var(--surface-variant)', border: '1.5px solid var(--border)' }}>
@@ -228,14 +259,62 @@ export default function PublicProfilePage() {
               </div>
             )}
           </div>
-        </div>
+        </AnimatedItem>
+      )}
+
+      {/* Reviews */}
+      {ratings.length > 0 && (
+        <AnimatedItem className="rounded-2xl p-5 mb-4" style={{ background: 'var(--surface)', border: '1.5px solid var(--border)', boxShadow: 'var(--shadow-sm)' }}>
+          <div className="flex items-center justify-between mb-3">
+            <p className="label-sm">Отзывы</p>
+            <span className="text-xs font-semibold" style={{ color: 'var(--text-3)' }}>{ratings.length}</span>
+          </div>
+          <div className="flex flex-col gap-3">
+            {ratings.map((r) => {
+              const authorInitials = (r.from_user?.full_name ?? '?').split(' ').map((s: string) => s[0]).join('').slice(0, 2).toUpperCase()
+              return (
+                <div key={r.id} style={{
+                  background: 'var(--surface-alt)',
+                  border: '1.5px solid var(--border)',
+                  borderRadius: '0.875rem',
+                  padding: '0.875rem 1rem',
+                }}>
+                  <div className="flex items-center gap-2 mb-2">
+                    {/* Author avatar */}
+                    <div style={{
+                      width: 32, height: 32, borderRadius: 9999, flexShrink: 0,
+                      background: 'var(--brand-soft)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      overflow: 'hidden',
+                    }}>
+                      {r.from_user?.avatar_url ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={r.from_user.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      ) : (
+                        <span style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--brand-text)' }}>{authorInitials}</span>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-xs truncate" style={{ color: 'var(--text-1)' }}>{r.from_user?.full_name ?? 'Пользователь'}</p>
+                      <p className="text-xs" style={{ color: 'var(--text-4)' }}>{formatReviewDate(r.created_at)}</p>
+                    </div>
+                    <StarRow score={r.score} />
+                  </div>
+                  {r.comment && (
+                    <p style={{ fontSize: '0.85rem', color: 'var(--text-2)', lineHeight: 1.5 }}>{r.comment}</p>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        </AnimatedItem>
       )}
 
       {/* Member since */}
-      <div className="flex items-center gap-2 justify-center" style={{ color: 'var(--text-4)', fontSize: '0.78rem' }}>
+      <AnimatedItem className="flex items-center gap-2 justify-center" style={{ color: 'var(--text-4)', fontSize: '0.78rem' }}>
         <span className="material-symbols-outlined" style={{ fontSize: 14 }}>calendar_today</span>
         На сервисе с {formatJoined(p.created_at)}
-      </div>
-    </div>
+      </AnimatedItem>
+    </AnimatedPage>
   )
 }

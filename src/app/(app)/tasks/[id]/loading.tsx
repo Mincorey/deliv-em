@@ -1,29 +1,48 @@
+import { Skeleton } from '@/components/ui/Skeleton'
+
 export default function TaskDetailLoading() {
   return (
-    <div className="p-6 max-w-2xl mx-auto animate-pulse">
+    <div className="p-6 max-w-2xl mx-auto">
       {/* Back link */}
-      <div className="h-4 w-28 rounded bg-[var(--surface-variant)] mb-5" />
+      <Skeleton style={{ height: 14, width: 112, marginBottom: 20 }} />
 
       {/* Title + badge */}
       <div className="flex items-center gap-3 mb-2">
-        <div className="h-6 w-48 rounded bg-[var(--surface-variant)]" />
-        <div className="h-5 w-20 rounded-full bg-[var(--surface-variant)]" />
+        <Skeleton style={{ height: 22, width: 240 }} />
+        <Skeleton style={{ height: 22, width: 80, borderRadius: 9999 }} />
       </div>
 
       {/* Meta row */}
       <div className="flex gap-4 mb-6">
-        <div className="h-4 w-24 rounded bg-[var(--surface-variant)]" />
-        <div className="h-4 w-20 rounded bg-[var(--surface-variant)]" />
+        <Skeleton style={{ height: 13, width: 96 }} />
+        <Skeleton style={{ height: 13, width: 80 }} />
       </div>
 
       {/* Main card */}
-      <div className="glass rounded-2xl p-5 mb-4 h-48" />
+      <div className="rounded-2xl p-5 mb-4" style={{ background: 'var(--surface)', border: '1.5px solid var(--border)' }}>
+        <Skeleton style={{ height: 12, width: 64, marginBottom: 12 }} />
+        <Skeleton style={{ height: 14, width: '90%', marginBottom: 8 }} />
+        <Skeleton style={{ height: 14, width: '70%', marginBottom: 20 }} />
+        <Skeleton style={{ height: 12, width: 80, marginBottom: 8 }} />
+        <Skeleton style={{ height: 14, width: '85%', marginBottom: 6 }} />
+        <Skeleton style={{ height: 14, width: '60%', marginBottom: 20 }} />
+        <div className="flex gap-4">
+          <Skeleton style={{ height: 13, width: 100 }} />
+          <Skeleton style={{ height: 13, width: 88 }} />
+        </div>
+      </div>
 
       {/* Courier / customer card */}
-      <div className="glass rounded-2xl p-5 mb-4 h-24" />
+      <div className="rounded-2xl p-4 mb-4 flex items-center gap-3" style={{ background: 'var(--surface)', border: '1.5px solid var(--border)' }}>
+        <Skeleton circle style={{ width: 40, height: 40 }} />
+        <div className="flex flex-col gap-2">
+          <Skeleton style={{ height: 14, width: 120 }} />
+          <Skeleton style={{ height: 11, width: 80 }} />
+        </div>
+      </div>
 
       {/* Action button */}
-      <div className="h-11 w-full rounded-full bg-[var(--surface-variant)]" />
+      <Skeleton style={{ height: 44, width: '100%', borderRadius: 9999 }} />
     </div>
   )
 }

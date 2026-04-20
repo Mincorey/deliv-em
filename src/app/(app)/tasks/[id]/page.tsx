@@ -11,6 +11,8 @@ import { useToast } from '@/components/ui/Toast'
 import { acceptTask, startTask, completeTask, confirmTask, rejectCompletion, cancelTask } from '../actions'
 import { TASK_TYPE_META, STATUS_META, type TaskWithProfiles, type Profile } from '@/lib/types'
 import { formatDate } from '@/lib/utils'
+import { TaskRouteMap } from '@/components/ui/TaskRouteMap'
+import { AnimatedPage, AnimatedItem } from '@/components/ui/Animated'
 
 export default function TaskDetailPage() {
   const params = useParams()
@@ -22,6 +24,9 @@ export default function TaskDetailPage() {
   const [currentUser, setCurrentUser] = useState<Profile | null>(null)
   const [loading, setLoading]         = useState(true)
   const [myRating, setMyRating]       = useState<number | null>(null)
+  // Live courier position (lat/lng for map, null = not tracking)
+  const [courierCoords, setCourierCoords] = useState<[number, number] | null>(null)
+  const [tracking, setTracking]           = useState(false)  // courier: is sharing?
 
   useEffect(() => {
     async function load() {
@@ -51,6 +56,102 @@ export default function TaskDetailPage() {
     }
     load()
   }, [params.id])
+
+  // Realtime: live task status updates (no page refresh needed)
+  useEffect(() => {
+    const channel = supabase
+      .channel(`task:${params.id}`)
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'tasks',
+        filter: `id=eq.${params.id}`,
+      }, async () => {
+        const { data } = await supabase
+          .from('tasks')
+          .select(`*, customer:profiles!tasks_customer_id_fkey(*), courier:profiles!tasks_courier_id_fkey(*)`)
+          .eq('id', params.id as string)
+          .single()
+        if (data) setTask(data as unknown as TaskWithProfiles)
+      })
+      .subscribe()
+
+    return () => { supabase.removeChannel(channel) }
+  }, [params.id])
+
+  /* ── Courier: share live location while task is in_progress ── */
+  useEffect(() => {
+    if (!task || !currentUser) return
+    if (task.status !== 'in_progress') return
+    if (currentUser.id !== task.courier_id) return
+    if (!navigator?.geolocation) return
+
+    setTracking(true)
+    const taskId    = task.id
+    const courierId = currentUser.id
+
+    const send = () => {
+      navigator.geolocation.getCurrentPosition(async (pos) => {
+        await supabase.from('courier_locations').upsert({
+          courier_id: courierId,
+          task_id:    taskId,
+          lat:        pos.coords.latitude,
+          lng:        pos.coords.longitude,
+          updated_at: new Date().toISOString(),
+        }, { onConflict: 'courier_id' })
+      }, () => { /* ignore single error */ })
+    }
+
+    send() // immediate first update
+    const interval = setInterval(send, 10000)
+
+    return () => {
+      clearInterval(interval)
+      setTracking(false)
+      // Clean up location row when courier leaves/stops
+      supabase.from('courier_locations').delete().eq('courier_id', courierId).eq('task_id', taskId)
+    }
+  }, [task?.status, task?.courier_id, currentUser?.id])
+
+  /* ── Customer: subscribe to courier location updates ── */
+  useEffect(() => {
+    if (!task || !currentUser) return
+    if (task.status !== 'in_progress') return
+    if (currentUser.id !== task.customer_id) return
+    if (!task.courier_id) return
+
+    const courierId = task.courier_id
+
+    // Load current position first
+    supabase.from('courier_locations')
+      .select('lat, lng')
+      .eq('courier_id', courierId)
+      .eq('task_id', task.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) setCourierCoords([data.lat, data.lng])
+      })
+
+    // Subscribe to realtime updates
+    const channel = supabase
+      .channel(`courier-loc:${courierId}`)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table:  'courier_locations',
+        filter: `courier_id=eq.${courierId}`,
+      }, (payload) => {
+        const row = payload.new as { lat: number; lng: number } | null
+        if (row?.lat) setCourierCoords([row.lat, row.lng])
+        else setCourierCoords(null)
+      })
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+      setCourierCoords(null)
+    }
+  }, [task?.status, task?.courier_id, task?.customer_id, currentUser?.id])
 
   if (loading) return (
     <div className="p-6 max-w-3xl mx-auto flex justify-center py-20">
@@ -93,8 +194,8 @@ export default function TaskDetailPage() {
   }
 
   return (
-    <div className="p-6 max-w-3xl mx-auto">
-      <div className="flex items-center gap-3 mb-6">
+    <AnimatedPage className="p-6 max-w-3xl mx-auto">
+      <AnimatedItem className="flex items-center gap-3 mb-6">
         <Link href="/tasks" style={{ color: 'var(--text-3)' }}>
           <span className="material-symbols-outlined">arrow_back</span>
         </Link>
@@ -111,13 +212,15 @@ export default function TaskDetailPage() {
           </Link>
         )}
         <Badge cls={statusMeta.cls}>{statusMeta.label}</Badge>
-      </div>
+      </AnimatedItem>
 
       <div className="flex flex-col gap-4">
         {/* Header */}
-        <div style={card}>
+        <AnimatedItem style={card}>
           <div className="flex items-start gap-3 mb-4">
-            <span className="material-symbols-outlined" style={{ color: typeMeta.color, fontSize: 28 }}>{typeMeta.icon}</span>
+            <div style={{ width: 48, height: 48, borderRadius: '0.875rem', flexShrink: 0, background: typeMeta.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <span className="material-symbols-outlined" style={{ color: typeMeta.color, fontSize: 28 }}>{typeMeta.icon}</span>
+            </div>
             <div className="flex-1">
               <h3 className="text-lg font-bold" style={{ color: 'var(--text-1)' }}>{task.title}</h3>
               <Badge cls="badge-blue mt-1">{typeMeta.label}</Badge>
@@ -149,19 +252,67 @@ export default function TaskDetailPage() {
               до {formatDate(task.deadline)}
             </div>
           )}
-        </div>
+        </AnimatedItem>
+
+        {/* Route map */}
+        {(task.from_address || task.to_address) && (
+          <AnimatedItem style={card}>
+            {/* Courier tracking indicator */}
+            {isCourier && task.status === 'in_progress' && (
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: 8,
+                marginBottom: 12, padding: '8px 12px',
+                background: tracking ? 'rgba(29,184,122,0.1)' : 'var(--surface-alt)',
+                border: `1.5px solid ${tracking ? 'rgba(29,184,122,0.35)' : 'var(--border)'}`,
+                borderRadius: '0.75rem',
+              }}>
+                <span style={{
+                  width: 8, height: 8, borderRadius: '50%', flexShrink: 0,
+                  background: tracking ? '#1db87a' : 'var(--text-4)',
+                  boxShadow: tracking ? '0 0 0 3px rgba(29,184,122,0.25)' : 'none',
+                  animation: tracking ? 'pulse 1.5s infinite' : 'none',
+                }} />
+                <span style={{ fontSize: '0.8rem', color: tracking ? 'var(--green)' : 'var(--text-3)', fontWeight: 600 }}>
+                  {tracking ? 'Геолокация передаётся заказчику' : 'Геолокация недоступна'}
+                </span>
+              </div>
+            )}
+            {/* Customer: show tracking status */}
+            {isCustomer && task.status === 'in_progress' && task.courier_id && (
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: 8,
+                marginBottom: 12, padding: '8px 12px',
+                background: courierCoords ? 'rgba(14,165,233,0.08)' : 'var(--surface-alt)',
+                border: `1.5px solid ${courierCoords ? 'rgba(14,165,233,0.3)' : 'var(--border)'}`,
+                borderRadius: '0.75rem',
+              }}>
+                <span className="material-symbols-outlined" style={{ fontSize: 16, color: courierCoords ? '#0ea5e9' : 'var(--text-4)' }}>
+                  delivery_truck_speed
+                </span>
+                <span style={{ fontSize: '0.8rem', color: courierCoords ? '#0ea5e9' : 'var(--text-3)', fontWeight: 600 }}>
+                  {courierCoords ? 'Курьер на карте — позиция обновляется' : 'Ожидаем геолокацию курьера…'}
+                </span>
+              </div>
+            )}
+            <TaskRouteMap
+              fromAddress={task.from_address}
+              toAddress={task.to_address}
+              courierCoords={isCustomer ? courierCoords : null}
+            />
+          </AnimatedItem>
+        )}
 
         {/* Description */}
         {task.description && (
-          <div style={card}>
+          <AnimatedItem style={card}>
             <p className="label-sm">Описание</p>
-            <p className="text-sm mt-2" style={{ color: 'var(--text-2)' }}>{task.description}</p>
-          </div>
+            <p className="text-sm mt-2" style={{ color: 'var(--text-2)', whiteSpace: 'pre-wrap' }}>{task.description}</p>
+          </AnimatedItem>
         )}
 
         {/* Participants */}
         {(task.customer || task.courier) && (
-          <div style={{ ...card, display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          <AnimatedItem style={{ ...card, display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
             {task.customer && (
               <Link href={`/profile/${task.customer.id}`} style={{ textDecoration: 'none' }}>
                 <div className="flex items-center gap-3" style={{

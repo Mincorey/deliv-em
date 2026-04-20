@@ -21,6 +21,7 @@ const CUSTOMER_MORE = [
   { href: '/couriers',  icon: 'directions_bike',          label: 'Курьеры' },
   { href: '/favorites', icon: 'favorite',                 label: 'Избранные' },
   { href: '/wallet',    icon: 'account_balance_wallet',   label: 'Кошелёк' },
+  { href: '/ratings',   icon: 'leaderboard',              label: 'Рейтинги' },
   { href: '/profile',   icon: 'person',                   label: 'Профиль' },
   { href: '/about',     icon: 'info',                     label: 'О сервисе' },
   { href: '/contacts',  icon: 'support_agent',            label: 'Контакты' },
@@ -35,6 +36,7 @@ const COURIER_PRIMARY = [
 const COURIER_MORE = [
   { href: '/orders',    icon: 'history',       label: 'Архив' },
   { href: '/favorites', icon: 'favorite',      label: 'Избранные' },
+  { href: '/ratings',   icon: 'leaderboard',   label: 'Рейтинги' },
   { href: '/profile',   icon: 'person',        label: 'Профиль' },
   { href: '/about',     icon: 'info',          label: 'О сервисе' },
   { href: '/contacts',  icon: 'support_agent', label: 'Контакты' },

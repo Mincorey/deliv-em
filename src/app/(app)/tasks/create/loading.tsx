@@ -1,17 +1,19 @@
+import { Skeleton } from '@/components/ui/Skeleton'
+
 export default function CreateTaskLoading() {
   return (
-    <div className="p-6 max-w-2xl mx-auto animate-pulse">
-      <div className="h-6 w-40 rounded bg-[var(--surface-variant)] mb-1" />
-      <div className="h-3 w-52 rounded bg-[var(--surface-variant)] mb-6" />
+    <div className="p-6 max-w-2xl mx-auto">
+      <Skeleton style={{ height: 22, width: 160, marginBottom: 8 }} />
+      <Skeleton style={{ height: 12, width: 208, marginBottom: 24 }} />
 
-      <div className="glass rounded-2xl p-6 flex flex-col gap-5">
+      <div className="rounded-2xl p-6 flex flex-col gap-5" style={{ background: 'var(--surface)', border: '1.5px solid var(--border)' }}>
         {[...Array(6)].map((_, i) => (
           <div key={i}>
-            <div className="h-3 w-24 rounded bg-[var(--surface-variant)] mb-2" />
-            <div className="h-10 rounded-2xl bg-[var(--surface-variant)]" />
+            <Skeleton style={{ height: 12, width: 96, marginBottom: 8 }} />
+            <Skeleton style={{ height: 40, width: '100%', borderRadius: '1rem' }} />
           </div>
         ))}
-        <div className="h-11 rounded-full bg-[var(--surface-variant)] mt-2" />
+        <Skeleton style={{ height: 44, width: '100%', borderRadius: 9999, marginTop: 8 }} />
       </div>
     </div>
   )

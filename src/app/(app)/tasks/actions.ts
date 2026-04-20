@@ -19,6 +19,7 @@ interface CreateTaskInput {
   description: string
   task_type: string
   reward: number
+  city: string
   from_address: string
   to_address: string
   deadline: string | null
@@ -53,6 +54,7 @@ export async function createTask(input: CreateTaskInput) {
       description: input.description || null,
       task_type: input.task_type,
       reward: input.reward,
+      city: input.city,
       from_address: input.from_address,
       to_address: input.to_address,
       deadline: input.deadline || null,
@@ -107,12 +109,25 @@ export async function createTask(input: CreateTaskInput) {
 
 // ── Accept task (courier) ────────────────────────────────────────────────────
 
+const MAX_ACTIVE_TASKS = 2
+
 export async function acceptTask(taskId: string) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Не авторизован' }
 
   const admin = adminClient()
+
+  // Check active task limit
+  const { count } = await admin
+    .from('tasks')
+    .select('id', { count: 'exact', head: true })
+    .eq('courier_id', user.id)
+    .in('status', ['matched', 'in_progress'])
+
+  if ((count ?? 0) >= MAX_ACTIVE_TASKS) {
+    return { error: `Нельзя взять больше ${MAX_ACTIVE_TASKS} поручений одновременно. Завершите текущие задания.` }
+  }
 
   // Atomic update: only succeeds if status is still 'published' at the moment of write
   // This prevents race conditions when multiple couriers click "Accept" simultaneously
@@ -220,22 +235,20 @@ export async function confirmTask(taskId: string) {
   if (error) return { error: error.message }
 
   if (task.courier_id) {
-    // Increment courier's task counters directly (no RPC needed)
-    const { data: cp } = await admin
-      .from('courier_profiles')
-      .select('completed_tasks, total_tasks')
-      .eq('id', task.courier_id)
-      .single()
+    // Recalculate counters from tasks table (source of truth) to avoid stale increment bugs
+    const [{ count: completedCount }, { count: totalCount }] = await Promise.all([
+      admin.from('tasks').select('id', { count: 'exact', head: true })
+        .eq('courier_id', task.courier_id).eq('status', 'completed'),
+      admin.from('tasks').select('id', { count: 'exact', head: true })
+        .eq('courier_id', task.courier_id),
+    ])
 
-    if (cp) {
-      await admin
-        .from('courier_profiles')
-        .update({
-          completed_tasks: (cp.completed_tasks ?? 0) + 1,
-          total_tasks:     (cp.total_tasks     ?? 0) + 1,
-        })
-        .eq('id', task.courier_id)
-    }
+    await admin.from('courier_profiles')
+      .upsert({
+        id: task.courier_id,
+        completed_tasks: completedCount ?? 0,
+        total_tasks:     totalCount     ?? 0,
+      }, { onConflict: 'id' })
 
     await admin.from('notifications').insert({
       user_id: task.courier_id,
@@ -287,18 +300,67 @@ export async function rejectCompletion(taskId: string) {
 
 // ── Cancel task (customer) ───────────────────────────────────────────────────
 
+const TASK_FEE = 100
+
 export async function cancelTask(taskId: string) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Не авторизован' }
 
-  const { error } = await adminClient()
+  const admin = adminClient()
+
+  // Atomic cancel — returns task data only if status was published/matched
+  const { data: cancelled, error } = await admin
     .from('tasks')
     .update({ status: 'cancelled' })
     .eq('id', taskId)
     .eq('customer_id', user.id)
     .in('status', ['published', 'matched'])
-  if (error) return { error: error.message }
+    .select('courier_id, title')
+    .single()
+
+  if (error || !cancelled) return { error: 'Поручение не найдено или не может быть отменено' }
+
+  // Refund the placement fee to customer
+  const { data: profile } = await admin
+    .from('profiles')
+    .select('wallet_balance')
+    .eq('id', user.id)
+    .single()
+
+  if (profile) {
+    const newBalance = Number(profile.wallet_balance) + TASK_FEE
+
+    await admin.from('profiles')
+      .update({ wallet_balance: newBalance })
+      .eq('id', user.id)
+
+    await admin.from('transactions').insert({
+      user_id      : user.id,
+      type         : 'refund',
+      amount       : TASK_FEE,
+      balance_after: newBalance,
+      description  : `Возврат комиссии за отменённое поручение: ${cancelled.title}`,
+    })
+
+    await admin.from('notifications').insert({
+      user_id: user.id,
+      type   : 'wallet',
+      title  : 'Возврат средств',
+      body   : `${TASK_FEE} ₽ возвращены за отмену поручения «${cancelled.title}»`,
+    })
+  }
+
+  // Notify courier if task was already matched
+  if (cancelled.courier_id) {
+    await admin.from('notifications').insert({
+      user_id: cancelled.courier_id,
+      type   : 'task_cancelled',
+      title  : 'Поручение отменено заказчиком',
+      body   : cancelled.title,
+      task_id: taskId,
+    })
+  }
 
   revalidatePath('/tasks')
   revalidatePath(`/tasks/${taskId}`)
@@ -397,6 +459,10 @@ export async function submitRating(input: RatingInput) {
   })
   if (error) return { error: error.message }
 
+  // Rating recalculation is handled atomically by the DB trigger
+  // recalc_courier_rating (AFTER INSERT ON ratings) — no manual update needed
+
   revalidatePath(`/tasks/${input.taskId}`)
+  revalidatePath(`/profile/${input.toUserId}`)
   return { success: true }
 }

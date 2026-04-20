@@ -351,6 +351,7 @@ export default function AuthPage() {
                     placeholder="Минимум 8 символов"
                     value={regPass}
                     onChange={(e) => setRegPass(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleRegister()}
                   />
                   <button
                     type="button"

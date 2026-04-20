@@ -24,6 +24,9 @@ export default function ChatPage() {
   const [sendError, setSendError]     = useState('')
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef  = useRef<HTMLInputElement>(null)
+  // Refs keep latest profiles accessible inside realtime closure without stale values
+  const currentUserRef = useRef<Profile | null>(null)
+  const partnerRef     = useRef<Profile | null>(null)
 
   useEffect(() => {
     async function init() {
@@ -43,12 +46,14 @@ export default function ChatPage() {
 
       if (!task) { router.push('/messages'); return }
 
-      setCurrentUser(profile as Profile)
-      setTaskTitle(task.title ?? '')
+      const me = profile as Profile
+      const partnerProfile = (task.customer_id === user.id ? task.courier : task.customer) as unknown as Profile
 
-      const partnerProfile =
-        task.customer_id === user.id ? task.courier : task.customer
-      setPartner(partnerProfile as unknown as Profile)
+      setCurrentUser(me)
+      currentUserRef.current = me
+      setTaskTitle(task.title ?? '')
+      setPartner(partnerProfile)
+      partnerRef.current = partnerProfile
 
       // Load existing messages
       const { data: msgs } = await supabase
@@ -77,8 +82,21 @@ export default function ChatPage() {
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'messages', filter: `task_id=eq.${taskId}` },
         async (payload) => {
-          const { data: sender } = await supabase
-            .from('profiles').select('*').eq('id', payload.new.sender_id).single()
+          const senderId = payload.new.sender_id as string
+
+          // Use cached profiles — avoids DB round-trip and stale closure issues
+          let sender: Profile | null =
+            senderId === currentUserRef.current?.id ? currentUserRef.current :
+            senderId === partnerRef.current?.id     ? partnerRef.current     :
+            null
+
+          // Fallback: unexpected sender (edge case) — fetch from DB
+          if (!sender) {
+            const { data, error } = await supabase
+              .from('profiles').select('*').eq('id', senderId).single()
+            if (error || !data) return  // can't render without sender profile
+            sender = data as Profile
+          }
 
           const newMsg = { ...payload.new, sender } as Message & { sender: Profile }
           setMessages((prev) => {

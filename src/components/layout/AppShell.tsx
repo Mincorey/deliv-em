@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import { Sidebar } from './Sidebar'
 import { Topbar } from './Topbar'
 import { BottomNav } from './BottomNav'
+import { useToast } from '@/components/ui/Toast'
 import type { Profile, Notification } from '@/lib/types'
 
 interface AppShellProps {
@@ -19,36 +20,42 @@ export function AppShell({ profile, notifications, initialUnreadMessages, childr
   const [unreadMessages, setUnreadMessages] = useState(initialUnreadMessages)
   const supabase = createClient()
   const pathname = usePathname()
+  const toast = useToast()
 
   const refreshCount = useCallback(async () => {
-    const { data: tasks } = await supabase
-      .from('tasks')
-      .select('id')
-      .or(`customer_id.eq.${profile.id},courier_id.eq.${profile.id}`)
-
-    const taskIds = tasks?.map((t) => t.id) ?? []
-    if (taskIds.length === 0) { setUnreadMessages(0); return }
-
-    const { count } = await supabase
-      .from('messages')
-      .select('id', { count: 'exact', head: true })
-      .eq('is_read', false)
-      .neq('sender_id', profile.id)
-      .in('task_id', taskIds)
-
-    setUnreadMessages(count ?? 0)
+    const { data } = await supabase.rpc('get_unread_message_count', { p_user_id: profile.id })
+    setUnreadMessages(data ?? 0)
   }, [profile.id])
 
-  // Refresh on every page navigation (catches "mark as read" from chat pages)
+  // Refresh on every page navigation (catches "mark as read" when leaving chat)
   useEffect(() => {
     refreshCount()
   }, [pathname])
 
-  // Realtime: catch new incoming messages live
+  // Realtime: new message → increment; message read → full recount
   useEffect(() => {
     const channel = supabase
       .channel('unread-messages-badge')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, refreshCount)
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'messages' }, refreshCount)
+      .subscribe()
+
+    return () => { supabase.removeChannel(channel) }
+  }, [profile.id])
+
+  // Realtime: show toast when a new notification arrives for current user
+  useEffect(() => {
+    const channel = supabase
+      .channel(`notifications:${profile.id}`)
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'notifications',
+        filter: `user_id=eq.${profile.id}`,
+      }, (payload) => {
+        const n = payload.new as Notification
+        toast.show(n.title || n.body, 'default')
+      })
       .subscribe()
 
     return () => { supabase.removeChannel(channel) }

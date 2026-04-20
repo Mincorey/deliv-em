@@ -381,3 +381,258 @@ Step 1 — Atomic race condition fix for task acceptance: `acceptTask` now uses 
 Step 2 — Unread messages counter fix: `AppShell` now refreshes the count on every page navigation (`usePathname`) — badge clears immediately after leaving the chat. Realtime subscription kept only for incoming messages (INSERT).
 Step 3 — Button hover animations: improved `.btn-primary` (translateY + shadow), `.btn-green` (translateY + shadow), `.btn-ghost` (translateY + border), `.type-btn` (scale + shadow); added `.btn-icon` class for Topbar/ThemeToggle icon buttons; added `active` press states with scale(0.97) for tactile feedback across all button types.
 ==============
+
+[2026-04-17 — Realtime обновления статуса поручений]
+Добавлены Supabase Realtime подписки для мгновенных обновлений без перезагрузки страницы:
+- `tasks/[id]/page.tsx`: подписка на UPDATE событие таблицы `tasks` по конкретному `id`. Когда курьер нажимает "Отметить как выполненное", страница заказчика автоматически обновляется и показывает кнопки подтверждения/отклонения.
+- `AppShell.tsx`: подписка на INSERT событие таблицы `notifications` для текущего пользователя. При появлении нового уведомления (например, "Курьер завершил поручение") показывается всплывающий тост в реальном времени на любой странице приложения.
+**Требование:** в панели Supabase необходимо включить Realtime для таблиц `tasks` и `notifications` (Database → Replication → Supabase Realtime → добавить таблицы).
+---
+[2026-04-17 — Realtime task status updates without page refresh]
+Added Supabase Realtime subscriptions for instant updates:
+- `tasks/[id]/page.tsx`: subscribes to UPDATE events on the `tasks` table filtered by task id. When a courier marks a task as done, the customer's page automatically refreshes and shows confirm/reject buttons.
+- `AppShell.tsx`: subscribes to INSERT events on the `notifications` table for the current user. When a new notification arrives (e.g. "Courier completed the task"), a toast appears in real-time on any page.
+**Requirement:** enable Realtime for `tasks` and `notifications` tables in Supabase dashboard (Database → Replication → Supabase Realtime).
+==============
+
+[2026-04-17 — Поручения в статусе awaiting_confirmation добавлены в Активные]
+На странице "Активные поручения" (`tasks/page.tsx`) в фильтр статусов добавлен `awaiting_confirmation`. Теперь поручения, отмеченные курьером как выполненные и ожидающие подтверждения заказчика, отображаются в Активных, а не пропадают до обновления страницы.
+---
+[2026-04-17 — awaiting_confirmation tasks now appear in Active tasks list]
+Added `awaiting_confirmation` to the status filter in `CustomerActiveTasks` (`tasks/page.tsx`). Tasks marked as done by the courier and awaiting customer confirmation now appear in the Active list instead of disappearing until page refresh.
+==============
+
+[2026-04-17 — Фикс счётчика заданий, пересчёт рейтинга, секция отзывов]
+1. `actions.ts` → `confirmTask`: счётчики `completed_tasks` и `total_tasks` теперь берутся прямым COUNT из таблицы `tasks` (не хрупким инкрементом), запись в `courier_profiles` через upsert — фикс бага с нулём у активных курьеров.
+2. `actions.ts` → `submitRating`: после каждой оценки пересчитывается среднее по всем оценкам из таблицы `ratings` и сохраняется в `courier_profiles.rating` через upsert. Раньше рейтинг никогда не обновлялся.
+3. `profile/[id]/page.tsx`: добавлена секция "Отзывы" — карточки с аватаром автора, датой, звёздами и текстом комментария. Загружается параллельно с остальными данными профиля.
+---
+[2026-04-17 — Task counter fix, rating recalc, reviews section on profile]
+1. `confirmTask`: counters now computed via direct COUNT from `tasks` table + upsert, fixing zero-counter bug for active couriers.
+2. `submitRating`: recalculates average rating from all `ratings` rows after each submission and persists to `courier_profiles.rating` — was never updated before.
+3. `profile/[id]/page.tsx`: added Reviews section showing cards with author avatar, date, star row, and comment text.
+==============
+
+[2026-04-17 — Увеличена ширина сайдбара]
+`globals.css`: ширина `.sidebar-auto` и `.sidebar-expanded` увеличена с 240px до 260px — длинная надпись "Избранные заказчики" больше не выезжает за пределы кнопки.
+---
+[2026-04-17 — Sidebar width increased]
+`globals.css`: `.sidebar-auto` and `.sidebar-expanded` widths increased from 240px to 260px so the "Избранные заказчики" label fits without overflow.
+==============
+
+[2026-04-17 — Рейтинг в шапке профиля, расчёт из отзывов]
+`profile/[id]/page.tsx`: рейтинг теперь вычисляется прямо из загруженных отзывов (среднее арифметическое) — поле `courier_profiles.rating` в БД больше не используется для отображения, т.к. могло содержать устаревшее значение. Рейтинг ★ и количество отзывов добавлены в шапку героя справа от имени. Блок статистики тоже обновлён на вычисленное значение.
+---
+[2026-04-17 — Rating in profile hero, computed from reviews]
+`profile/[id]/page.tsx`: rating is now computed directly from loaded reviews (arithmetic mean) instead of trusting the `courier_profiles.rating` DB field which could be stale. Star rating and review count added to the hero header next to the name. Stats block also updated to use the computed value.
+==============
+
+[2026-04-17 — Фикс данных в списке курьеров, переключатель доступности, актуальная статистика]
+1. `couriers/page.tsx`: рейтинг и счётчик выполненных заданий теперь вычисляются из таблиц `ratings` и `tasks` (не из устаревших полей `courier_profiles`). Сортировка по живому рейтингу. Если оценок нет — показывается "Нет оценок" вместо дефолтного 5.0.
+2. `profile/page.tsx`: добавлен переключатель "Доступность" для курьеров — сохраняется в `courier_profiles.is_available`. Это поле определяет статус Онлайн/Оффлайн в списке курьеров. Статистика на странице настроек теперь читается из источника правды (реальный COUNT заданий, среднее из оценок).
+---
+[2026-04-17 — Live data on couriers list, availability toggle, accurate stats]
+1. `couriers/page.tsx`: rating and completed count now computed from `ratings` and `tasks` tables instead of stale `courier_profiles` fields. Sorted by live rating. Shows "No ratings" instead of default 5.0.
+2. `profile/page.tsx`: added Availability toggle for couriers — saves to `courier_profiles.is_available`, controls Online/Offline status on couriers list. Settings stats now read from source of truth (real task COUNT, average from ratings).
+==============
+
+[2026-04-17 — Удалена функция доступности/онлайн-оффлайн курьера]
+Убрали индикатор "Онлайн/Оффлайн" и "Доступен/Недоступен" со всех страниц: список курьеров (`couriers/page.tsx`), публичный профиль (`profile/[id]/page.tsx`), настройки профиля (`profile/page.tsx`). Все связанные state-переменные и логика сохранения удалены.
+---
+[2026-04-17 — Removed courier availability/online-offline feature]
+Removed online/offline and available/unavailable indicators from all pages: couriers list, public profile, profile settings. All related state variables and save logic removed.
+==============
+
+[2026-04-17 — Дашборд курьера: живые данные, убран статус онлайн/оффлайн]
+`dashboard/page.tsx` → `CourierDashboard`: рейтинг теперь вычисляется из таблицы `ratings` (среднее арифметическое), счётчик выполненных заданий — прямым COUNT из `tasks`. Карточка "Статус" (Онлайн/Оффлайн) убрана. Сетка стала 3-колоночной вместо 4.
+---
+[2026-04-17 — Courier dashboard: live data, removed online/offline status card]
+`CourierDashboard`: rating now computed from `ratings` table, completed count from direct COUNT on `tasks`. "Status" card (Online/Offline) removed. Grid changed from 4 to 3 columns.
+==============
+
+[2026-04-17 — Enforcement настроек конфиденциальности через RPC]
+`delivem_schema.sql`: добавлена функция `get_public_profile(target_id UUID)` — возвращает JSON профиля с маскировкой на уровне БД: `phone` возвращается только при `show_phone=true`, `bio` — при `show_bio != false` (дефолт true), `birth_date` — при `show_birth_date=true`. `email` и `wallet_balance` никогда не возвращаются. `profile/[id]/page.tsx`: заменён `select('*')` на `rpc('get_public_profile')` — чувствительные данные больше не отправляются клиенту когда скрыты. Ранее privacy settings были только UI-уровнем; теперь enforcement на уровне БД. Создан файл миграции `supabase/migrations/add_get_public_profile_rpc.sql`.
+---
+[2026-04-17 — Privacy settings enforcement via RPC]
+`delivem_schema.sql`: added `get_public_profile(target_id UUID)` function — returns masked profile JSON: `phone` only when `show_phone=true`, `bio` when `show_bio != false` (default true), `birth_date` when `show_birth_date=true`. `email` and `wallet_balance` never exposed. `profile/[id]/page.tsx`: replaced `select('*')` with `rpc('get_public_profile')` — sensitive data no longer sent to client when hidden. Previously privacy settings were UI-only; now enforced at DB level. Migration file `supabase/migrations/add_get_public_profile_rpc.sql` created.
+==============
+
+[2026-04-17 — Удалён дублирующий пересчёт рейтинга в submitRating]
+`tasks/actions.ts` → `submitRating`: удалён ручной пересчёт среднего рейтинга (SELECT всех оценок + UPDATE courier_profiles), который выполнялся после INSERT. Пересчёт уже выполняется атомарно DB-триггером `recalc_courier_rating` (AFTER INSERT ON ratings) внутри той же транзакции. Двойной пересчёт создавал race condition: триггер и app-код одновременно писали в одну строку courier_profiles, app-код мог использовать устаревшие данные.
+---
+[2026-04-17 — Removed duplicate rating recalculation in submitRating]
+`tasks/actions.ts` → `submitRating`: removed manual average rating recalculation (SELECT all scores + UPDATE courier_profiles) that ran after INSERT. Recalculation is already handled atomically by the `recalc_courier_rating` DB trigger (AFTER INSERT ON ratings) within the same transaction. The duplicate caused a race condition: trigger and app code wrote to the same courier_profiles row simultaneously, with app code potentially using stale data.
+==============
+
+[2026-04-17 — Фикс realtime-хендлера в чате: обработка ошибок и stale closure]
+`messages/[taskId]/page.tsx`: исправлены три проблемы realtime-подписки. 1) Добавлены `currentUserRef` и `partnerRef` — `useRef`-зеркала state, доступные внутри realtime-замыкания без stale значений. 2) Хендлер теперь использует кэшированные профили вместо запроса к БД (0 запросов для 2 известных участников). 3) Добавлена обработка ошибок: если профиль отправителя не загружается — сообщение пропускается (return) вместо краша с `undefined sender`.
+---
+[2026-04-17 — Chat realtime handler: error handling and stale closure fix]
+`messages/[taskId]/page.tsx`: fixed three realtime subscription issues. 1) Added `currentUserRef` and `partnerRef` — `useRef` mirrors of state, accessible inside the realtime closure without stale values. 2) Handler now uses cached profiles instead of DB query (0 extra requests for the 2 known participants). 3) Added error handling: if sender profile cannot be loaded, the message is skipped (return) instead of crashing with `undefined sender`.
+==============
+
+[2026-04-17 — Фикс счётчика непрочитанных сообщений]
+`AppShell.tsx`: `refreshCount` переписан с двух запросов (все task IDs + count) на один вызов RPC `get_unread_message_count` — JOIN прямо в БД, O(1) по числу заданий. Realtime-подписка теперь слушает и INSERT и UPDATE на таблице `messages` — счётчик корректно сбрасывается когда чат помечает сообщения прочитанными. `delivem_schema.sql`: добавлена функция `get_unread_message_count(p_user_id UUID)` с `SECURITY DEFINER STABLE`. Создан файл миграции `supabase/migrations/add_get_unread_message_count_rpc.sql`.
+---
+[2026-04-17 — Unread messages counter fix]
+`AppShell.tsx`: `refreshCount` rewritten from two queries (fetch all task IDs + count) to a single RPC call `get_unread_message_count` — JOIN runs in DB, O(1) regardless of task count. Realtime subscription now listens to both INSERT and UPDATE on `messages` — counter correctly resets when chat marks messages as read. `delivem_schema.sql`: added `get_unread_message_count(p_user_id UUID)` function with `SECURITY DEFINER STABLE`. Migration file `supabase/migrations/add_get_unread_message_count_rpc.sql` created.
+==============
+
+[2026-04-17 — Добавлены недостающие индексы в БД]
+`delivem_schema.sql`: добавлены три индекса. `idx_courier_profiles_rating` — сортировка курьеров по рейтингу. `idx_profiles_role` — запросы по роли пользователя (страница курьеров). `idx_messages_unread` — частичный (partial) индекс только по непрочитанным сообщениям (`WHERE is_read = false`): простой индекс по булеву полю неэффективен, частичный в разы меньше по размеру и быстрее. Замечание: `profiles.email` и `profiles.phone` уже проиндексированы неявно через `UNIQUE` constraint. Создан файл миграции `supabase/migrations/add_missing_indexes.sql`.
+---
+[2026-04-17 — Added missing DB indexes]
+`delivem_schema.sql`: added three indexes. `idx_courier_profiles_rating` — courier sorting by rating. `idx_profiles_role` — role-based queries (couriers list). `idx_messages_unread` — partial index on unread messages only (`WHERE is_read = false`): a plain boolean index is not selective; a partial index is far smaller and faster. Note: `profiles.email` and `profiles.phone` are already implicitly indexed via their `UNIQUE` constraints. Migration file `supabase/migrations/add_missing_indexes.sql` created.
+==============
+
+[2026-04-17 — Infinite scroll на страницах заданий и курьеров]
+Заменена URL-пагинация на infinite scroll через IntersectionObserver. Созданы клиентские компоненты `CourierFeed.tsx` и `CouriersList.tsx`; `tasks/page.tsx` и `couriers/page.tsx` остались server components (auth/redirect). Данные подгружаются порциями (20 заданий / 15 курьеров) при скролле к низу страницы. Смена фильтров → `key` меняется → компонент ремаунтится и сбрасывает список. Рейтинги и статистика курьеров подгружаются инкрементально для каждой партии. В `globals.css` добавлена анимация `@keyframes spin` для спиннера загрузки.
+---
+[2026-04-17 — Infinite scroll on tasks and couriers pages]
+Replaced URL-based pagination with infinite scroll via IntersectionObserver. Created client components `CourierFeed.tsx` and `CouriersList.tsx`; `tasks/page.tsx` and `couriers/page.tsx` remain server components (auth/redirect). Data loads in batches (20 tasks / 15 couriers) when the user scrolls to the bottom. Filter change → key changes → component remounts and resets the list. Courier ratings and stats load incrementally per batch. Added `@keyframes spin` to `globals.css` for the loading spinner.
+==============
+
+[2026-04-17 — Пагинация на страницах заданий и курьеров]
+`tasks/page.tsx`: в `CourierFeed` добавлена URL-пагинация через `?page=N` (20 заданий за раз). Запрос использует `.range(from, to)` вместо загрузки всех записей. Кнопки «Назад/Далее» появляются только когда нужны. `CustomerActiveTasks` получил `.limit(50)` как защитный барьер. `couriers/page.tsx`: аналогичная пагинация (15 курьеров за раз). Оба компонента корректно обрабатывают edge-кейсы: пустую страницу > 0, сохранение фильтров в URL при навигации.
+---
+[2026-04-17 — Pagination on tasks and couriers pages]
+`tasks/page.tsx`: added URL-based pagination via `?page=N` to `CourierFeed` (20 tasks per page). Query uses `.range(from, to)` instead of loading all records. Prev/Next buttons appear only when needed. `CustomerActiveTasks` gets `.limit(50)` as a safety guard. `couriers/page.tsx`: same pagination pattern (15 couriers per page). Both handle edge cases: empty page > 0, filter params preserved in URL during navigation.
+==============
+
+[2026-04-17 — Возврат 100₽ при отмене поручения]
+`tasks/actions.ts` → `cancelTask`: при отмене поручения теперь автоматически возвращается комиссия 100₽ на кошелёк заказчика. Логика: атомарный UPDATE с `.select()` возвращает данные задания в одном запросе; баланс увеличивается на 100₽; в `transactions` записывается операция типа `refund`; заказчик получает уведомление типа `wallet` о возврате; если поручение было в статусе `matched` — курьер получает уведомление `task_cancelled`. Ранее деньги при отмене просто терялись.
+---
+[2026-04-17 — Refund 100₽ on task cancellation]
+`tasks/actions.ts` → `cancelTask`: cancelling a task now automatically refunds the 100₽ placement fee to the customer's wallet. Logic: atomic UPDATE with `.select()` returns task data in one query; balance is incremented by 100₽; a `refund` transaction is recorded; customer receives a `wallet` notification; if the task was `matched`, the courier receives a `task_cancelled` notification. Previously the fee was simply lost on cancellation.
+==============
+
+[2026-04-17 — Добавлена колонка privacy_settings в profiles, фикс handleSave]
+`delivem_schema.sql`: добавлена колонка `privacy_settings JSONB NOT NULL DEFAULT '{"show_phone":false,"show_bio":true,"show_birth_date":false}'` в таблицу `profiles` — колонка присутствовала в `types.ts` и использовалась в коде, но отсутствовала в схеме. `profile/page.tsx`: убран двухэтапный костыль в `handleSave` — теперь все поля (включая `birth_date` и `privacy_settings`) сохраняются одним атомарным запросом; удалено сообщение об ошибке с SQL-инструкцией. Создан файл миграции `supabase/migrations/add_privacy_settings_column.sql`.
+---
+[2026-04-17 — Added privacy_settings column to profiles, fixed handleSave]
+`delivem_schema.sql`: added `privacy_settings JSONB NOT NULL DEFAULT '...'` column to `profiles` — the column was referenced in `types.ts` and used in code but missing from the schema. `profile/page.tsx`: removed two-step workaround in `handleSave` — all fields (including `birth_date` and `privacy_settings`) are now saved in a single atomic update; removed the error toast with inline SQL instructions. Migration file `supabase/migrations/add_privacy_settings_column.sql` created.
+==============
+
+[2026-04-17 — RLS политики для courier_profiles]
+`delivem_schema.sql`: добавлены три отсутствующих RLS политики для таблицы `courier_profiles`. Ранее RLS была включена, но политик не было — таблица была полностью заблокирована для клиентских запросов. Теперь: `courier_profiles_public_read` — любой авторизованный пользователь может читать профили курьеров (нужно для страницы курьеров и деталей поручений); `courier_profiles_own_insert` — курьер может создать только свой профиль; `courier_profiles_own_update` — курьер может изменять только свой профиль. Создан файл миграции `supabase/migrations/add_courier_profiles_rls.sql`.
+---
+[2026-04-17 — RLS policies for courier_profiles]
+`delivem_schema.sql`: added three missing RLS policies for the `courier_profiles` table. Previously RLS was enabled but no policies existed — the table was fully blocked for client-side queries. Now: `courier_profiles_public_read` — any authenticated user can read courier profiles (needed for the couriers list and task detail pages); `courier_profiles_own_insert` — courier can only create their own profile; `courier_profiles_own_update` — courier can only update their own profile. Migration file `supabase/migrations/add_courier_profiles_rls.sql` created.
+==============
+
+[2026-04-17 — Синхронизация схемы БД: добавлен статус awaiting_confirmation в enum]
+`delivem_schema.sql`: в `task_status` ENUM добавлен пропущенный статус `awaiting_confirmation` (курьер завершил — ждёт подтверждения заказчика). Статус уже присутствовал в живой БД и в `types.ts`, но отсутствовал в файле схемы. Создан файл миграции `supabase/migrations/add_awaiting_confirmation_status.sql` с командой `ALTER TYPE task_status ADD VALUE IF NOT EXISTS 'awaiting_confirmation' BEFORE 'completed'` для применения на новых БД.
+---
+[2026-04-17 — DB schema sync: added awaiting_confirmation to task_status enum]
+`delivem_schema.sql`: added missing `awaiting_confirmation` status to the `task_status` ENUM (courier marked done, awaiting customer confirmation). Status already existed in the live DB and `types.ts` but was absent from the schema file. Created migration file `supabase/migrations/add_awaiting_confirmation_status.sql` with `ALTER TYPE task_status ADD VALUE IF NOT EXISTS 'awaiting_confirmation' BEFORE 'completed'` for fresh DB setups.
+==============
+
+[2026-04-17 — Архив поручений: мгновенное переключение вкладок]
+`orders/page.tsx` переписан как клиентский компонент. Все задания загружаются один раз при открытии страницы, фильтрация по вкладкам (Все/Выполнены/Отменены) происходит на клиенте без запросов к серверу. Устранена задержка 5 секунд при переключении вкладок на мобильных устройствах.
+---
+[2026-04-17 — Orders archive: instant tab switching]
+`orders/page.tsx` rewritten as a client component. All tasks loaded once on mount, tab filtering (All/Completed/Cancelled) done client-side with no server requests. Eliminates 5-second delay when switching tabs on mobile.
+==============
+
+[2026-04-17 — Красивые скелетон-экраны загрузки для всех страниц]
+Добавлена CSS-анимация `shimmer` в `globals.css` — волна бренд-цвета (#00236f светлая / #5b9bff тёмная) скользит по фону `--surface-variant`. Создан компонент `src/components/ui/Skeleton.tsx`. Все 11 файлов `loading.tsx` переписаны: каждый точно повторяет структуру своей страницы (карточки, аватары, кнопки, инпуты), автоматически адаптируется к светлой и тёмной теме через CSS-переменные.
+---
+[2026-04-17 — Beautiful shimmer skeleton loading screens for all pages]
+Added `shimmer` CSS keyframe animation to `globals.css` — a brand-color highlight (#00236f light / #5b9bff dark) sweeps across `--surface-variant` backgrounds. Created `src/components/ui/Skeleton.tsx` reusable component. All 11 `loading.tsx` files rewritten with page-accurate layouts (cards, avatars, buttons, inputs), automatically adapting to both light and dark themes via CSS variables.
+==============
+
+[2026-04-17 — Оптимизация изображений аватара в профиле]
+В `next.config.ts` добавлен `remotePatterns` для Supabase Storage (`*.supabase.co`). В `profile/page.tsx` тег `<img>` заменён на `<Image fill sizes="72px">` из `next/image` — аватар теперь автоматически оптимизируется (WebP/AVIF, lazy load, кеш CDN).
+---
+[2026-04-17 — Avatar image optimization in profile page]
+Added `remotePatterns` for Supabase Storage (`*.supabase.co`) in `next.config.ts`. Replaced `<img>` with `<Image fill sizes="72px">` from `next/image` in `profile/page.tsx` — avatar is now automatically optimized (WebP/AVIF, lazy load, CDN cache).
+==============
+
+[2026-04-17 — Оптимизация запросов на дашборде]
+В `dashboard/page.tsx` заменены `select('*')` на точные списки колонок. Профиль: `id, role, full_name, wallet_balance, city`. Задания: `id, title, from_address, to_address, status, task_type, reward, deadline, customer_id` + вложенные профили только `id, full_name`. Уменьшен объём данных передаваемых из БД на ~60–70%.
+---
+[2026-04-17 — Query optimization on dashboard]
+Replaced `select('*')` with explicit column lists in `dashboard/page.tsx`. Profile: `id, role, full_name, wallet_balance, city`. Tasks: `id, title, from_address, to_address, status, task_type, reward, deadline, customer_id` + nested profiles only `id, full_name`. Reduces data transferred from DB by ~60–70%.
+==============
+[2026-04-18]
+Добавлена поддержка клавиши Enter на форме регистрации: все текстовые поля (имя, фамилия, телефон, email, пароль) теперь запускают регистрацию по нажатию Enter. На форме входа Enter уже работал ранее.
+---
+[2026-04-18]
+Added Enter key support to the registration form: all text fields (name, surname, phone, email, password) now trigger registration on Enter. Login form already had this.
+==============
+[2026-04-18]
+Добавлен поиск заданий с расширенными фильтрами для курьеров:
+- Новое поле `city` в таблице `tasks` (миграция add_city_to_tasks.sql) — список городов Абхазии: Гагра, Пицунда, Гудаута, Новый Афон, Сухум, Агудзера, Очамчыра, Ткуарчал, Гал
+- В форму создания поручения добавлен выбор города
+- FeedFilters переписан: фильтры по городу, типу задания, мин. и макс. оплате, срочности (дедлайн < 3 часов), сортировка (новые / оплата ↑↓)
+- CourierFeed обновлён: поддержка всех новых URL-параметров в запросе
+Добавлена страница рейтингов /ratings:
+- Два таба: Курьеры (сортировка по рейтингу) и Заказчики (по числу завершённых поручений)
+- Карточки с аватаром, рейтингом (звёзды), статистикой, городом, онлайн-статусом, транспортом
+- Переход на профиль пользователя по клику
+- Пункт "Рейтинги" (иконка leaderboard) добавлен в Sidebar и BottomNav для обеих ролей
+---
+[2026-04-18]
+Added advanced task search filters for couriers:
+- New `city` column in `tasks` table (migration add_city_to_tasks.sql) — Abkhazia cities list
+- City selector added to task creation form
+- FeedFilters rewritten: city, task type, min/max reward, urgency (deadline < 3h), sort order
+- CourierFeed updated to support all new URL params
+Added /ratings page:
+- Two tabs: Couriers (sorted by rating) and Customers (sorted by completed tasks count)
+- Cards with avatar, star rating, stats, city, online status, transport type
+- Click through to user profile page
+- "Ratings" menu item (leaderboard icon) added to Sidebar and BottomNav for both roles
+==============
+[2026-04-18]
+Мобильные улучшения и исправления:
+- Убран лишний отступ сверху на Android-устройствах без выреза (mobile-safe-spacer теперь использует только реальный safe-area-inset, без минимального значения 50px)
+- Исправлена загрузка аватара с телефона: добавлено сжатие изображений через Canvas до 800px/300KB перед отправкой, исправлена обработка ошибок с детальным сообщением
+- Страница рейтингов: количество выполненных заданий у курьеров теперь считается напрямую из таблицы tasks (не из кеша courier_profiles)
+- Dashboard: карточки "Активные поручения" и "Выполнено всего" стали кликабельными с выразительной анимацией (↑ масштаб + тень), кнопки "Смотреть" убраны; кнопка "Пополнить" перемещена вправо в карточку баланса; добавлен класс stat-card-link
+- allowedDevOrigins обновлён: добавлен новый IP 192.168.31.72
+---
+[2026-04-18]
+Mobile improvements and fixes:
+- Removed excessive top gap on Android phones without notch (mobile-safe-spacer now uses only real safe-area-inset, no 50px minimum)
+- Fixed avatar upload on mobile: added Canvas image compression (max 800px/300KB), improved error messages
+- Ratings page: courier completed task count now read directly from tasks table (not from stale courier_profiles cache)
+- Dashboard: "Active tasks" and "Completed" stat cards are now clickable with expressive hover animation; "View" buttons removed; "Top up" button moved to right side of balance card; stat-card-link CSS class added
+- allowedDevOrigins updated: added new IP 192.168.31.72
+==============
+[2026-04-18]
+Обрезка аватара через react-image-crop:
+- Добавлен компонент AvatarCropper (src/components/ui/AvatarCropper.tsx) с круговой обрезкой, ползунком масштаба и экспортом в JPEG 400×400px через Canvas
+- Страница профиля теперь открывает модальное окно кроппера после выбора файла; готовый blob загружается в Supabase Storage
+- Убрана зависимость от next/image на странице профиля (заменён на <img>) во избежание ошибок hostname
+---
+[2026-04-18]
+Avatar cropping with react-image-crop:
+- Added AvatarCropper component (src/components/ui/AvatarCropper.tsx) with circular crop, zoom slider, and Canvas JPEG 400×400px export
+- Profile page now opens the cropper modal after file selection; the resulting blob is uploaded to Supabase Storage
+- Removed next/image dependency on the profile page (replaced with <img>) to avoid hostname validation errors
+==============
+
+2026-04-20
+Страница авторизации: добавлена поддержка отправки формы по нажатию Enter. На форме входа — Enter на полях email и пароля вызывает handleLogin(). На форме регистрации — Enter на поле пароля вызывает handleRegister().
+---
+Auth page: added Enter key support for form submission. On the login form — pressing Enter in the email or password fields triggers handleLogin(). On the registration form — pressing Enter in the password field triggers handleRegister().
+==============
+
+2026-04-20
+Добавлена стартовая лендинг-страница (src/app/page.tsx + src/app/LandingClient.tsx): полноэкранный Hero с анимированным заголовком и CTA-кнопками, секция "Как это работает" (3 шага), секция преимуществ (4 карточки), секция статистики с анимированными счётчиками (данные из БД), встроенная форма входа/регистрации с glassmorphism-карточкой, фиксированный хедер с кнопками навигации и ThemeToggle, футер. Незалогиненные пользователи видят лендинг; залогиненные перенаправляются на /dashboard. Все блоки анимированы через IntersectionObserver при прокрутке. Адаптивная вёрстка для мобильных.
+---
+Added a full landing page (src/app/page.tsx + src/app/LandingClient.tsx): full-screen Hero with animated headline and CTA buttons, "How it works" section (3 steps), benefits section (4 cards), stats section with animated counters (live DB data), embedded login/register glass-card form, fixed header with navigation and ThemeToggle, footer. Unauthenticated users see the landing; authenticated users are redirected to /dashboard. All blocks animate in via IntersectionObserver on scroll. Fully responsive for mobile.
+==============
+
+2026-04-20
+Доработка лендинга: изменён текст бейджа на "Работаем по всей Абхазии", уменьшен размер заголовка Hero для мобильных (clamp), скорректирован текст шага №3 — убрана фраза об автоматическом переводе, добавлена кнопка "Контакты" в футере со ссылкой на /contacts.
+---
+Landing page refinements: badge text changed to "Работаем по всей Абхазии", Hero headline font size reduced for mobile (clamp), step 3 description updated to remove automatic payment wording, Contacts button added to footer linking to /contacts.
+==============
+
+2026-04-20
+Добавлены страницы правовых документов: /privacy (Политика конфиденциальности) и /terms (Условия использования). Оба документа оформлены в виде красивых карточек с иконками, секциями и списками. На странице /about добавлена карточка "Правовые документы" с кнопками-ссылками на оба документа.
+---
+Added legal document pages: /privacy (Privacy Policy) and /terms (Terms of Use). Both documents are styled as clean card-based layouts with icons, sections, and lists. The /about page now includes a "Legal documents" card with link buttons to both pages.
+==============

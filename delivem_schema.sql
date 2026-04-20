@@ -20,12 +20,13 @@ CREATE TYPE task_type AS ENUM (
 );
 
 CREATE TYPE task_status AS ENUM (
-  'draft',        -- Черновик (не оплачен)
-  'published',    -- Опубликован — виден курьерам, свободен
-  'matched',      -- Принят курьером, ожидает старта
-  'in_progress',  -- Выполняется
-  'completed',    -- Выполнен
-  'cancelled'     -- Отменён
+  'draft',                  -- Черновик (не оплачен)
+  'published',              -- Опубликован — виден курьерам, свободен
+  'matched',                -- Принят курьером, ожидает старта
+  'in_progress',            -- Выполняется
+  'awaiting_confirmation',  -- Курьер завершил, ждёт подтверждения заказчика
+  'completed',              -- Выполнен
+  'cancelled'               -- Отменён
 );
 
 CREATE TYPE transaction_type AS ENUM (
@@ -57,8 +58,9 @@ CREATE TABLE public.profiles (
   city            TEXT NOT NULL DEFAULT 'Сухум',  -- Города Абхазии
   avatar_url      TEXT,
   bio             TEXT,
-  birth_date      DATE,                              -- Дата рождения
-  has_car         BOOLEAN NOT NULL DEFAULT FALSE,    -- Наличие автомобиля
+  birth_date        DATE,                              -- Дата рождения
+  has_car           BOOLEAN NOT NULL DEFAULT FALSE,    -- Наличие автомобиля
+  privacy_settings  JSONB NOT NULL DEFAULT '{"show_phone":false,"show_bio":true,"show_birth_date":false}'::jsonb,
   wallet_balance  NUMERIC(10, 2) NOT NULL DEFAULT 0.00 CHECK (wallet_balance >= 0),
   is_verified     BOOLEAN NOT NULL DEFAULT FALSE,
   is_active       BOOLEAN NOT NULL DEFAULT TRUE,
@@ -76,6 +78,8 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER profiles_updated_at
   BEFORE UPDATE ON public.profiles
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE INDEX idx_profiles_role ON public.profiles(role);
 
 -- ──────────────────────────────────────────────────────────────
 -- 3. COURIER PROFILES (доп. поля только для курьеров)
@@ -96,6 +100,8 @@ CREATE TABLE public.courier_profiles (
 CREATE TRIGGER courier_profiles_updated_at
   BEFORE UPDATE ON public.courier_profiles
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE INDEX idx_courier_profiles_rating ON public.courier_profiles(rating DESC);
 
 -- ──────────────────────────────────────────────────────────────
 -- 4. TASKS (Поручения)
@@ -195,6 +201,8 @@ CREATE TABLE public.messages (
 CREATE INDEX idx_messages_task_id   ON public.messages(task_id);
 CREATE INDEX idx_messages_sender_id ON public.messages(sender_id);
 CREATE INDEX idx_messages_created_at ON public.messages(created_at DESC);
+-- Partial index: only unread messages — boolean index alone is not selective
+CREATE INDEX idx_messages_unread ON public.messages(task_id) WHERE is_read = false;
 
 -- ──────────────────────────────────────────────────────────────
 -- 8. RATINGS (Рейтинговая система)
@@ -268,6 +276,57 @@ CREATE TABLE public.notifications (
 CREATE INDEX idx_notifications_user_id ON public.notifications(user_id);
 
 -- ──────────────────────────────────────────────────────────────
+-- 12. UTILITY FUNCTIONS
+-- ──────────────────────────────────────────────────────────────
+
+-- Returns unread incoming message count for a user in a single JOIN query
+-- Used by AppShell to avoid fetching all task IDs on every navigation
+CREATE OR REPLACE FUNCTION get_unread_message_count(p_user_id UUID)
+RETURNS INTEGER AS $$
+  SELECT COUNT(*)::INTEGER
+  FROM public.messages m
+  JOIN public.tasks t ON t.id = m.task_id
+  WHERE m.is_read    = false
+    AND m.sender_id != p_user_id
+    AND (t.customer_id = p_user_id OR t.courier_id = p_user_id)
+$$ LANGUAGE sql SECURITY DEFINER STABLE;
+
+-- Returns a public profile with sensitive fields masked per the owner's privacy_settings.
+-- phone/bio/birth_date are nulled out when the owner has disabled them.
+-- email and wallet_balance are never exposed to other users.
+CREATE OR REPLACE FUNCTION get_public_profile(target_id UUID)
+RETURNS JSON AS $$
+DECLARE
+  prof public.profiles%ROWTYPE;
+BEGIN
+  SELECT * INTO prof FROM public.profiles WHERE id = target_id;
+  IF NOT FOUND THEN RETURN NULL; END IF;
+
+  RETURN json_build_object(
+    'id',               prof.id,
+    'role',             prof.role,
+    'full_name',        prof.full_name,
+    'city',             prof.city,
+    'avatar_url',       prof.avatar_url,
+    'is_verified',      prof.is_verified,
+    'has_car',          prof.has_car,
+    'created_at',       prof.created_at,
+    'privacy_settings', prof.privacy_settings,
+    -- Masked fields: only returned when owner has enabled them
+    'phone',
+      CASE WHEN (prof.privacy_settings->>'show_phone')::boolean = true
+        THEN prof.phone ELSE NULL END,
+    'bio',
+      CASE WHEN (prof.privacy_settings->>'show_bio')::boolean IS DISTINCT FROM false
+        THEN prof.bio ELSE NULL END,
+    'birth_date',
+      CASE WHEN (prof.privacy_settings->>'show_birth_date')::boolean = true
+        THEN prof.birth_date::text ELSE NULL END
+  );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER STABLE;
+
+-- ──────────────────────────────────────────────────────────────
 -- 11. FEEDBACK (Обратная связь с разработчиком)
 -- ──────────────────────────────────────────────────────────────
 
@@ -303,6 +362,16 @@ CREATE POLICY "profiles_self" ON public.profiles FOR ALL
   USING (auth.uid() = id);
 CREATE POLICY "profiles_couriers_public" ON public.profiles FOR SELECT
   USING (role = 'courier');
+
+-- Профиль курьера: читают все авторизованные (нужно для страницы курьеров);
+-- изменять и создавать может только сам курьер
+CREATE POLICY "courier_profiles_public_read" ON public.courier_profiles FOR SELECT
+  TO authenticated
+  USING (true);
+CREATE POLICY "courier_profiles_own_insert" ON public.courier_profiles FOR INSERT
+  WITH CHECK (auth.uid() = id);
+CREATE POLICY "courier_profiles_own_update" ON public.courier_profiles FOR UPDATE
+  USING (auth.uid() = id);
 
 -- Поручения: заказчик видит свои; курьеры видят опубликованные
 CREATE POLICY "tasks_customer_own" ON public.tasks FOR ALL
