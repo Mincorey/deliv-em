@@ -648,3 +648,9 @@ Query performance optimization: parallel requests instead of sequential (Promise
 ---
 Refactor per audit: shared CitySelect extracted (4 duplicates → one), LandingClient.tsx split into 7 sections (~32 lines vs 735), spinners replaced with skeletons in messages/orders/wallet, DB error handling added in messages/orders/wallet, client-side validation in profile form, fixed JSX tags in tasks/[id].
 ==============
+
+[2026-04-20]
+После выхода из аккаунта пользователь теперь перенаправляется на стартовую страницу (/) вместо страницы входа (/auth).
+---
+After logout, users are now redirected to the landing page (/) instead of the auth page (/auth).
+==============

@@ -194,7 +194,7 @@ export default function ProfilePage() {
 
   async function handleLogout() {
     await supabase.auth.signOut()
-    router.push('/auth')
+    router.push('/')
   }
 
   const initials = ((firstName[0] ?? '') + (lastName[0] ?? '')).toUpperCase() || '?'

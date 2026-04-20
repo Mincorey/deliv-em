@@ -27,7 +27,7 @@ export default async function AppLayout({
   if (!profile) {
     // Sign out so middleware doesn't loop between /dashboard ↔ /auth
     await supabase.auth.signOut()
-    redirect('/auth')
+    redirect('/')
   }
 
   // Notifications
