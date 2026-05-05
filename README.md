@@ -6,6 +6,19 @@ P2P delivery and task service for the Republic of Abkhazia. Customers post deliv
 
 ---
 
+## 📚 Documentation
+
+**All documentation is in the [`docs/`](./docs/) folder:**
+
+- 📋 [**Full Project Audit**](./docs/ПОЛНЫЙ_АУДИТ_ПРОЕКТА_DELIV-EM.md) — Complete audit with 30+ improvement ideas
+- ⚙️ [**Infrastructure Setup**](./docs/INFRASTRUCTURE_SETUP.md) — Email, Rate Limiting, Logging, Sentry
+- 🔍 [**Audit Log System**](./docs/AUDIT_LOG_GUIDE.md) — Detailed guide for audit logging
+- ✅ [**Audit Deployment**](./docs/AUDIT_DEPLOYMENT_CHECKLIST.md) — How to deploy audit_log
+
+**→ [Go to docs/README.md](./docs/README.md) for the full index**
+
+---
+
 ## Quick Start
 
 ```bash
@@ -684,4 +697,16 @@ UI refinements on mobile: /couriers page — courier card now displays avatar an
 Полная переработка страницы /ratings: рефакторинг карточек курьеров для использования семантических классов (.courier-card, .courier-link, .courier-name, .courier-location, .courier-rating) вместо inline-стилей, что обеспечивает единообразный мобильный layout с остальными страницами. Добавлен новый раздел "Топ 10 курьеров сервиса" на странице рейтингов, который отображает 10 курьеров с самым высоким рейтингом в отдельной секции. Ниже раздела "Топ 10" отображаются все оставшиеся курьеры, отсортированные по рейтингу в убывающем порядке, в секции "Все курьеры". Карточки курьеров теперь имеют правильный мобильный layout, идентичный карточкам на странице /couriers.
 ---
 Complete ratings page restructure: refactored courier cards to use semantic CSS classes (.courier-card, .courier-link, .courier-name, .courier-location, .courier-rating) instead of inline styles, ensuring consistent mobile layout across pages. Added new "Топ 10 курьеров сервиса" section that displays the 10 highest-rated couriers in a separate section. Below the Top 10, all remaining couriers are displayed sorted by rating in descending order in the "Все курьеры" section. Courier cards now have correct mobile layout identical to /couriers page.
+==============
+
+## 2026-05-05 (Infrastructure: Email, Logging, Rate Limiting, Error Tracking)
+Добавлена полная инфраструктура для отправки email с поддержкой нескольких провайдеров (Mailgun, SendGrid, Resend, SMTP). Создан сервис `lib/services/email.ts` с готовыми шаблонами для восстановления пароля, подтверждения email, уведомлений и обратной связи. Реализован rate limiting middleware `lib/middleware/rateLimiter.ts` с использованием библиотеки limiter для защиты API от спама (настраивается через `RATE_LIMIT_WINDOW` и `RATE_LIMIT_MAX_REQUESTS` в .env). Настроено логирование `lib/services/logger.ts` с поддержкой уровней LOG_LEVEL (debug, info, warn, error). Интегрирована система отслеживания ошибок Sentry через `lib/sentry.ts` для мониторинга ошибок в production. Созданы примеры API маршрутов: `/api/feedback` для обратной связи, `/api/auth/reset-password` для восстановления пароля, `/api/auth/confirm-email` для подтверждения email. Все сервисы готовы к использованию — нужно только добавить реальные ключи от провайдеров в .env файл.
+---
+Added complete infrastructure for email sending with support for multiple providers (Mailgun, SendGrid, Resend, SMTP). Created `lib/services/email.ts` service with ready-made templates for password reset, email confirmation, notifications, and feedback. Implemented rate limiting middleware `lib/middleware/rateLimiter.ts` using limiter library to protect API from spam (configured via `RATE_LIMIT_WINDOW` and `RATE_LIMIT_MAX_REQUESTS` in .env). Set up logging `lib/services/logger.ts` with LOG_LEVEL support (debug, info, warn, error). Integrated Sentry error tracking system via `lib/sentry.ts` for production error monitoring. Created example API routes: `/api/feedback` for feedback, `/api/auth/reset-password` for password recovery, `/api/auth/confirm-email` for email confirmation. All services are ready to use — just add real provider credentials to .env file.
+==============
+
+## 2026-05-05 (Audit Log System Implementation)
+Реализована полная система аудит логирования для отслеживания всех изменений в критичных таблицах БД. Создана новая таблица `audit_log` с индексами для быстрого поиска по table_name, record_id, user_id, operation и created_at. Реализована PL/pgSQL функция `audit_trigger_func()` которая автоматически логирует все INSERT, UPDATE и DELETE операции с сохранением старых и новых значений. Триггеры подключены к критичным таблицам: transactions (финансовые операции), ratings (рейтинги), tasks (заказы) и profiles (профили пользователей). Создан сервис `lib/services/audit.ts` с функциями для просмотра аудит логов, фильтрации по таблице/пользователю/дате, отслеживания истории записей и анализа изменений. Добавлен API маршрут `/api/audit` для запроса логов (типы запроса: all, record, user, table, stats). Создана подробная документация в `AUDIT_LOG_GUIDE.md` с примерами использования и best practices. RLS политики защищают аудит логи от несанкционированного доступа.
+---
+Implemented complete audit logging system for tracking all changes in critical database tables. Created new `audit_log` table with indexes for fast searching by table_name, record_id, user_id, operation, and created_at. Implemented PL/pgSQL function `audit_trigger_func()` that automatically logs all INSERT, UPDATE, and DELETE operations with old and new values saved. Triggers connected to critical tables: transactions (financial operations), ratings (ratings), tasks (orders), and profiles (user profiles). Created `lib/services/audit.ts` service with functions to view audit logs, filter by table/user/date, track record history, and analyze changes. Added `/api/audit` route for querying logs (query types: all, record, user, table, stats). Created detailed documentation in `AUDIT_LOG_GUIDE.md` with usage examples and best practices. RLS policies protect audit logs from unauthorized access.
 ==============
