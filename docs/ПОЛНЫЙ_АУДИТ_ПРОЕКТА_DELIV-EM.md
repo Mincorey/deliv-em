@@ -307,6 +307,11 @@ interface ServerActionResult {
 type CreateTaskResult = 
   | { success: true; task: Task }
   | { success: false; error: string }
+
+// ✅ ИСПРАВЛЕНО [2026-05-05]
+// Обновлены auth функции в src/app/(auth)/auth/actions.ts
+// Использован discriminated union с явным ok флагом:
+// type AuthResult = { ok: true } | { ok: false; error: string }
 ```
 
 ### 3.2 Обработка ошибок
