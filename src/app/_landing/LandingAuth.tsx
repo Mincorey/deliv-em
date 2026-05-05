@@ -47,7 +47,7 @@ export const LandingAuth = forwardRef<HTMLDivElement, Props>(function LandingAut
     setFormError(''); setLoading(true)
     const result = await loginAction(loginEmail.trim(), loginPass)
     setLoading(false)
-    if (result.error) { setFormError(result.error); toast.show(result.error, 'error') }
+    if (!result.ok) { setFormError(result.error); toast.show(result.error, 'error') }
     else window.location.href = '/dashboard'
   }
 
@@ -62,7 +62,7 @@ export const LandingAuth = forwardRef<HTMLDivElement, Props>(function LandingAut
       transportType: role === 'courier' ? transport : undefined,
     })
     setLoading(false)
-    if (result.error) { setFormError(result.error); toast.show(result.error, 'error') }
+    if (!result.ok) { setFormError(result.error); toast.show(result.error, 'error') }
     else window.location.href = '/dashboard'
   }
 

@@ -51,7 +51,7 @@ export default function AuthPage() {
     setLoading(true)
     const result = await loginAction(loginEmail.trim(), loginPass)
     setLoading(false)
-    if (result.error) {
+    if (!result.ok) {
       setFormError(result.error)
       toast.show(result.error, 'error')
     } else {
@@ -78,7 +78,7 @@ export default function AuthPage() {
     })
 
     setLoading(false)
-    if (result.error) {
+    if (!result.ok) {
       setFormError(result.error)
       toast.show(result.error, 'error')
     } else {

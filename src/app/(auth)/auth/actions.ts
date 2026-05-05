@@ -2,22 +2,21 @@
 
 import { createClient } from '@/lib/supabase/server'
 
-export async function loginAction(
-  email: string,
-  password: string,
-): Promise<{ error?: string }> {
+type AuthResult = { ok: true } | { ok: false; error: string }
+
+export async function loginAction(email: string, password: string): Promise<AuthResult> {
   const supabase = await createClient()
   const { error } = await supabase.auth.signInWithPassword({ email, password })
   if (error) {
     if (error.message.includes('Email not confirmed')) {
-      return { error: 'Email не подтверждён. Проверьте почту и перейдите по ссылке из письма.' }
+      return { ok: false, error: 'Email не подтверждён. Проверьте почту и перейдите по ссылке из письма.' }
     }
     if (error.message.includes('Invalid login credentials')) {
-      return { error: 'Неверный email или пароль' }
+      return { ok: false, error: 'Неверный email или пароль' }
     }
-    return { error: error.message }
+    return { ok: false, error: error.message }
   }
-  return {}
+  return { ok: true }
 }
 
 export async function registerAction(input: {
@@ -28,7 +27,7 @@ export async function registerAction(input: {
   city: string
   role: 'customer' | 'courier'
   transportType?: string
-}): Promise<{ error?: string }> {
+}): Promise<AuthResult> {
   const supabase = await createClient()
 
   const { data, error } = await supabase.auth.signUp({
@@ -45,8 +44,8 @@ export async function registerAction(input: {
     },
   })
 
-  if (error) return { error: error.message }
-  if (!data.user) return { error: 'Не удалось создать аккаунт' }
+  if (error) return { ok: false, error: error.message }
+  if (!data.user) return { ok: false, error: 'Не удалось создать аккаунт' }
 
   const { error: profErr } = await supabase.from('profiles').insert({
     id: data.user.id,
@@ -57,7 +56,7 @@ export async function registerAction(input: {
     city: input.city,
   })
 
-  if (profErr) return { error: 'Аккаунт создан, но профиль не сохранился: ' + profErr.message }
+  if (profErr) return { ok: false, error: 'Аккаунт создан, но профиль не сохранился: ' + profErr.message }
 
   if (input.role === 'courier') {
     await supabase.from('courier_profiles').insert({
@@ -66,5 +65,5 @@ export async function registerAction(input: {
     })
   }
 
-  return {}
+  return { ok: true }
 }
