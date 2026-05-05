@@ -39,10 +39,12 @@ export default function RootLayout({
         />
         {/* Prevent flash of wrong theme */}
         <script dangerouslySetInnerHTML={{ __html: `
-          try {
-            var t = localStorage.getItem('theme');
-            if (t === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
-          } catch(e) {}
+          (function() {
+            try {
+              const theme = localStorage.getItem('theme') || 'light';
+              document.documentElement.setAttribute('data-theme', theme);
+            } catch(e) {}
+          })();
         `}} />
       </head>
       <body suppressHydrationWarning>
