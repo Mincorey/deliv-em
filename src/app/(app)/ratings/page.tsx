@@ -157,71 +157,107 @@ export default async function RatingsPage({
 
       {/* ── Couriers tab ── */}
       {tab === 'couriers' && (
-        <AnimatedList className="flex flex-col gap-3">
+        <>
           {couriers.length === 0 && (
             <AnimatedItem><EmptyState icon="directions_bike" text="Нет зарегистрированных курьеров" /></AnimatedItem>
           )}
-          {couriers.map((courier) => (
-            <AnimatedItem key={courier.id}>
-            <Link href={`/profile/${courier.id}`} style={{ textDecoration: 'none' }}>
-              <div
-                className="glass rounded-2xl p-4 flex items-center gap-4"
-                style={{ transition: 'box-shadow 0.15s', cursor: 'pointer' }}
-              >
-                {/* Avatar + Name on left */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
-                  <Avatar name={courier.full_name} avatarUrl={courier.avatar_url} size={44} />
-                  <div style={{ minWidth: 0 }}>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-bold text-sm" style={{ color: 'var(--text-1)' }}>{courier.full_name}</span>
-                      {courier.is_verified && (
-                        <span className="material-symbols-outlined fill-icon" style={{ fontSize: 16, color: 'var(--brand)' }}>verified</span>
-                      )}
+
+          {couriers.length > 0 && (
+            <>
+              {/* Top 10 Section */}
+              <AnimatedItem>
+                <h3 className="font-bold mb-3 text-base" style={{ color: 'var(--text-1)' }}>Топ 10 курьеров сервиса</h3>
+              </AnimatedItem>
+              <AnimatedList className="flex flex-col gap-3 mb-6">
+                {couriers.slice(0, 10).map((courier) => (
+                  <AnimatedItem key={courier.id}>
+                    <div className="courier-card" style={{ position: 'relative' }}>
+                      <Link
+                        href={`/profile/${courier.id}`}
+                        className="courier-link"
+                        style={{ textDecoration: 'none' }}
+                      >
+                        <Avatar name={courier.full_name} avatarUrl={courier.avatar_url} size={48} />
+                        <p className="courier-name" style={{ color: 'var(--text-1)' }}>{courier.full_name}</p>
+                        <div className="courier-location">
+                          <span className="material-symbols-outlined" style={{ color: 'var(--text-3)', fontSize: 14 }}>location_on</span>
+                          <span style={{ color: 'var(--text-3)' }}>{courier.city}</span>
+                          {courier.courier_profiles?.transport_type && (
+                            <>
+                              <span style={{ color: 'var(--text-4)' }}>·</span>
+                              <span className="material-symbols-outlined" style={{ color: 'var(--text-3)', fontSize: 14 }}>
+                                {TRANSPORT_ICONS[courier.courier_profiles.transport_type] ?? 'directions_walk'}
+                              </span>
+                              <span style={{ color: 'var(--text-3)' }}>
+                                {TRANSPORT_LABELS[courier.courier_profiles.transport_type] ?? ''}
+                              </span>
+                            </>
+                          )}
+                        </div>
+                        <div className="courier-rating">
+                          <span className="font-bold" style={{ color: '#f59e0b' }}>
+                            {(courier.courier_profiles?.rating ?? 5).toFixed(1)}
+                          </span>
+                          <span className="material-symbols-outlined fill-icon" style={{ color: '#f59e0b', fontSize: 14 }}>star</span>
+                          <span style={{ color: 'var(--text-4)' }}>·</span>
+                          <span style={{ color: 'var(--text-3)' }}>{courier.completed_count} заданий</span>
+                        </div>
+                      </Link>
                     </div>
-                    {courier.courier_profiles?.is_available && (
-                      <span style={{
-                        fontSize: '0.65rem', fontWeight: 700, padding: '2px 8px',
-                        borderRadius: 9999, background: 'var(--green-soft)', color: 'var(--green)', marginTop: '0.25rem',
-                      }}>онлайн</span>
-                    )}
-                  </div>
-                </div>
+                  </AnimatedItem>
+                ))}
+              </AnimatedList>
 
-                {/* Rating + Info */}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <StarRating rating={courier.courier_profiles?.rating ?? 5} />
-                    <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#f59e0b' }}>
-                      {(courier.courier_profiles?.rating ?? 5).toFixed(1)}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 mt-0.5 flex-wrap" style={{ fontSize: '0.75rem', color: 'var(--text-3)' }}>
-                    <span>{courier.courier_profiles?.completed_tasks ?? 0} заданий</span>
-                    <span>·</span>
-                    <span>{courier.city}</span>
-                  </div>
-                </div>
-
-                {/* Transport */}
-                {courier.courier_profiles?.transport_type && (
-                  <div style={{ flexShrink: 0, textAlign: 'center' }}>
-                    <span className="material-symbols-outlined" style={{ fontSize: 22, color: 'var(--text-3)' }}>
-                      {TRANSPORT_ICONS[courier.courier_profiles.transport_type] ?? 'directions_walk'}
-                    </span>
-                    <div style={{ fontSize: '0.6rem', color: 'var(--text-4)' }}>
-                      {TRANSPORT_LABELS[courier.courier_profiles.transport_type] ?? ''}
-                    </div>
-                  </div>
-                )}
-
-                <span className="material-symbols-outlined" style={{ fontSize: 18, color: 'var(--text-4)', flexShrink: 0 }}>
-                  chevron_right
-                </span>
-              </div>
-            </Link>
-            </AnimatedItem>
-          ))}
-        </AnimatedList>
+              {/* All Couriers Section */}
+              {couriers.length > 10 && (
+                <>
+                  <AnimatedItem>
+                    <h3 className="font-bold mb-3 text-base" style={{ color: 'var(--text-1)' }}>Все курьеры</h3>
+                  </AnimatedItem>
+                  <AnimatedList className="flex flex-col gap-3">
+                    {couriers.slice(10).map((courier) => (
+                      <AnimatedItem key={courier.id}>
+                        <div className="courier-card" style={{ position: 'relative' }}>
+                          <Link
+                            href={`/profile/${courier.id}`}
+                            className="courier-link"
+                            style={{ textDecoration: 'none' }}
+                          >
+                            <Avatar name={courier.full_name} avatarUrl={courier.avatar_url} size={48} />
+                            <p className="courier-name" style={{ color: 'var(--text-1)' }}>{courier.full_name}</p>
+                            <div className="courier-location">
+                              <span className="material-symbols-outlined" style={{ color: 'var(--text-3)', fontSize: 14 }}>location_on</span>
+                              <span style={{ color: 'var(--text-3)' }}>{courier.city}</span>
+                              {courier.courier_profiles?.transport_type && (
+                                <>
+                                  <span style={{ color: 'var(--text-4)' }}>·</span>
+                                  <span className="material-symbols-outlined" style={{ color: 'var(--text-3)', fontSize: 14 }}>
+                                    {TRANSPORT_ICONS[courier.courier_profiles.transport_type] ?? 'directions_walk'}
+                                  </span>
+                                  <span style={{ color: 'var(--text-3)' }}>
+                                    {TRANSPORT_LABELS[courier.courier_profiles.transport_type] ?? ''}
+                                  </span>
+                                </>
+                              )}
+                            </div>
+                            <div className="courier-rating">
+                              <span className="font-bold" style={{ color: '#f59e0b' }}>
+                                {(courier.courier_profiles?.rating ?? 5).toFixed(1)}
+                              </span>
+                              <span className="material-symbols-outlined fill-icon" style={{ color: '#f59e0b', fontSize: 14 }}>star</span>
+                              <span style={{ color: 'var(--text-4)' }}>·</span>
+                              <span style={{ color: 'var(--text-3)' }}>{courier.completed_count} заданий</span>
+                            </div>
+                          </Link>
+                        </div>
+                      </AnimatedItem>
+                    ))}
+                  </AnimatedList>
+                </>
+              )}
+            </>
+          )}
+        </>
       )}
 
       {/* ── Customers tab ── */}

@@ -679,3 +679,9 @@ Extended mobile optimization on /couriers page: restructured courier card HTML f
 ---
 UI refinements on mobile: /couriers page — courier card now displays avatar and name on one line to the left (flex-row) instead of centered. /favorites page — reduced delete button from 36x36 to 28x28, icon from 18px to 14px. /wallet page — increased balance visibility: font size from 3rem to 4rem, ₽ symbol from text-xl to text-2xl. /ratings page — removed rank badge (orange circle with number), improved courier card layout: avatar+name on left, rating+info in center, transport on right.
 ==============
+
+## 2026-05-05 (Ratings Page Restructure)
+Полная переработка страницы /ratings: рефакторинг карточек курьеров для использования семантических классов (.courier-card, .courier-link, .courier-name, .courier-location, .courier-rating) вместо inline-стилей, что обеспечивает единообразный мобильный layout с остальными страницами. Добавлен новый раздел "Топ 10 курьеров сервиса" на странице рейтингов, который отображает 10 курьеров с самым высоким рейтингом в отдельной секции. Ниже раздела "Топ 10" отображаются все оставшиеся курьеры, отсортированные по рейтингу в убывающем порядке, в секции "Все курьеры". Карточки курьеров теперь имеют правильный мобильный layout, идентичный карточкам на странице /couriers.
+---
+Complete ratings page restructure: refactored courier cards to use semantic CSS classes (.courier-card, .courier-link, .courier-name, .courier-location, .courier-rating) instead of inline styles, ensuring consistent mobile layout across pages. Added new "Топ 10 курьеров сервиса" section that displays the 10 highest-rated couriers in a separate section. Below the Top 10, all remaining couriers are displayed sorted by rating in descending order in the "Все курьеры" section. Courier cards now have correct mobile layout identical to /couriers page.
+==============
