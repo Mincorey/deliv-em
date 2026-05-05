@@ -667,3 +667,9 @@ Added `suppressHydrationWarning` to all `motion.div` elements in `src/components
 ---
 Mobile optimization: global font size reduction on mobile devices (max-width: 767px) by 12% (font-size: 0.88em) for better readability and to prevent text wrapping on buttons. Redesigned courier card layout on mobile: avatar with name → online status, rating and transport type → completed tasks count → location. Added courier removal functionality from favorites on /favorites page with a beautiful confirmation modal and delete button with icon. Created new FavoriteCourierCard component for managing favorite couriers.
 ==============
+
+## 2026-05-05 (Continuation)
+Расширенная оптимизация мобильной версии страницы /couriers: переработана структура HTML карточки курьера для лучшего отображения на мобильных устройствах. На мобильной версии карточка теперь отображается с четкой вертикальной структурой: строка с аватаркой и именем, разделитель, строка с локацией и видом транспорта, разделитель, строка с рейтингом и количеством выполненных заданий. Иконка сердечка (добавление в избранное) позиционирована в правом верхнем углу карточки. На десктопной версии макет остается горизонтальным с аватаркой слева, информацией посередине и рейтингом справа. Также увеличены размеры иконок Material Symbols на мобильной версии (26px вместо 24px) и переделана структура Bottom Navigation для лучшей читаемости иконок.
+---
+Extended mobile optimization on /couriers page: restructured courier card HTML for better mobile display. Mobile version now shows clear vertical layout: avatar with name row, divider, location and transport row, divider, rating and completed tasks row. Heart icon (add to favorites) positioned in top-right corner. Desktop version remains horizontal with avatar on left, info in center, rating on right. Increased Material Symbols icon sizes on mobile (26px instead of 24px) and restructured Bottom Navigation for better icon readability.
+==============

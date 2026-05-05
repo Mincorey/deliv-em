@@ -125,45 +125,51 @@ export function CouriersList({ currentUserId }: Props) {
             const liveCompleted = completedMap[courier.id] ?? 0
 
             return (
-              <div key={courier.id} className="courier-card desktop-courier-layout" style={{ position: 'relative' }}>
+              <div key={courier.id} className="courier-card" style={{ position: 'relative' }}>
                 <Link
                   href={`/profile/${courier.id}`}
-                  style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0, textDecoration: 'none' }}
+                  className="courier-link"
+                  style={{ textDecoration: 'none' }}
                 >
+                  {/* Avatar */}
                   <Avatar name={courier.full_name} avatarUrl={courier.avatar_url} size={48} />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <p className="font-bold text-sm" style={{ color: 'var(--text-1)' }}>{courier.full_name}</p>
-                        <div className="flex items-center gap-2 mt-0.5">
-                          <span className="material-symbols-outlined" style={{ color: 'var(--text-3)', fontSize: 14 }}>location_on</span>
-                          <span className="text-xs" style={{ color: 'var(--text-3)' }}>{courier.city}</span>
-                          {transport && (
-                            <>
-                              <span style={{ color: 'var(--text-4)' }}>·</span>
-                              <span className="material-symbols-outlined" style={{ color: 'var(--text-3)', fontSize: 14 }}>{transport.icon}</span>
-                              <span className="text-xs" style={{ color: 'var(--text-3)' }}>{transport.label}</span>
-                            </>
-                          )}
-                        </div>
-                        {courier.bio && (
-                          <p className="text-xs mt-1" style={{ color: 'var(--text-3)', maxWidth: 300 }}>{courier.bio}</p>
-                        )}
-                      </div>
-                      <div className="text-right flex-shrink-0 ml-4">
-                        <div className="flex items-center gap-1 justify-end">
-                          {liveRating !== null ? (
-                            <>
-                              <span className="font-bold text-sm" style={{ color: '#f59e0b' }}>{liveRating.toFixed(1)}</span>
-                              <span className="material-symbols-outlined fill-icon" style={{ color: '#f59e0b', fontSize: 14 }}>star</span>
-                            </>
-                          ) : (
-                            <span className="text-xs" style={{ color: 'var(--text-4)' }}>Нет оценок</span>
-                          )}
-                        </div>
-                        <p className="text-xs" style={{ color: 'var(--text-3)' }}>{liveCompleted} заданий</p>
-                      </div>
+
+                  {/* Info container: name, location, rating */}
+                  <div className="courier-info">
+                    {/* Name row */}
+                    <p className="courier-name" style={{ color: 'var(--text-1)' }}>{courier.full_name}</p>
+
+                    {/* Location row */}
+                    <div className="courier-location">
+                      <span className="material-symbols-outlined" style={{ color: 'var(--text-3)', fontSize: 14 }}>location_on</span>
+                      <span style={{ color: 'var(--text-3)' }}>{courier.city}</span>
+                      {transport && (
+                        <>
+                          <span style={{ color: 'var(--text-4)' }}>·</span>
+                          <span className="material-symbols-outlined" style={{ color: 'var(--text-3)', fontSize: 14 }}>{transport.icon}</span>
+                          <span style={{ color: 'var(--text-3)' }}>{transport.label}</span>
+                        </>
+                      )}
                     </div>
+
+                    {/* Bio (desktop only) */}
+                    {courier.bio && (
+                      <p className="courier-bio" style={{ color: 'var(--text-3)', maxWidth: 300 }}>{courier.bio}</p>
+                    )}
+                  </div>
+
+                  {/* Rating row (desktop: right side) */}
+                  <div className="courier-rating">
+                    {liveRating !== null ? (
+                      <>
+                        <span className="font-bold" style={{ color: '#f59e0b' }}>{liveRating.toFixed(1)}</span>
+                        <span className="material-symbols-outlined fill-icon" style={{ color: '#f59e0b', fontSize: 14 }}>star</span>
+                      </>
+                    ) : (
+                      <span style={{ color: 'var(--text-4)' }}>Нет оценок</span>
+                    )}
+                    <span style={{ color: 'var(--text-4)' }}>·</span>
+                    <span style={{ color: 'var(--text-3)' }}>{liveCompleted} заданий</span>
                   </div>
                 </Link>
                 <FavoriteButton courierId={courier.id} isFav={isFav} />

@@ -106,7 +106,7 @@ export function BottomNav({ profile, unreadMessages }: BottomNavProps) {
                   transition: 'background 0.15s',
                 }}
               >
-                <span className="material-symbols-outlined" style={{ fontSize: 22 }}>
+                <span className="material-symbols-outlined bottom-nav-icon">
                   {item.icon}
                 </span>
                 <span style={{ fontSize: '0.65rem', fontWeight: 600, textAlign: 'center', lineHeight: 1.2 }}>
@@ -186,8 +186,7 @@ export function BottomNav({ profile, unreadMessages }: BottomNavProps) {
 
               <div style={{ position: 'relative' }}>
                 <span
-                  className={`material-symbols-outlined ${active ? 'fill-icon' : ''}`}
-                  style={{ fontSize: 24 }}
+                  className={`material-symbols-outlined bottom-nav-icon ${active ? 'fill-icon' : ''}`}
                 >
                   {item.icon}
                 </span>

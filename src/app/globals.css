@@ -476,6 +476,11 @@ input[type=number] { appearance: textfield; -moz-appearance: textfield; }
   transform: translateY(-1px);
 }
 
+/* ── Bottom nav icon ── */
+.bottom-nav-icon {
+  font-size: 24px;
+}
+
 /* ── Modal ── */
 .modal-overlay {
   position: fixed;
@@ -624,11 +629,65 @@ input[type=number] { appearance: textfield; -moz-appearance: textfield; }
   --skeleton-highlight: color-mix(in srgb, var(--surface-variant) 55%, var(--brand) 45%);
 }
 
+/* ── Courier card layout (desktop) ── */
+.courier-card {
+  display: flex;
+  align-items: stretch;
+  gap: 1rem;
+  padding: 1rem 0.875rem;
+  position: relative;
+}
+
+.courier-link {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.courier-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.courier-name {
+  font-weight: bold;
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.courier-location {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex-wrap: wrap;
+  font-size: 0.75rem;
+}
+
+.courier-bio {
+  font-size: 0.75rem;
+  margin: 0;
+}
+
+.courier-rating {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex-wrap: wrap;
+  font-size: 0.75rem;
+  margin-left: auto;
+  text-align: right;
+}
+
 /* ── Mobile breakpoint (< 768px) ── */
 @media (max-width: 767px) {
   /* Global mobile font size scale: reduce overall font sizes */
   * {
-    font-size: 0.88em !important;
+    font-size: 0.98em !important;
   }
 
   /* Layout: hide sidebar, show bottom nav + safe-area spacer */
@@ -750,6 +809,92 @@ input[type=number] { appearance: textfield; -moz-appearance: textfield; }
     justify-content: center !important;
     text-align: center !important;
     max-width: 110px !important;
+  }
+
+  /* Increase icon sizes on mobile */
+  .material-symbols-outlined {
+    font-size: 26px !important;
+  }
+
+  .bottom-nav-icon {
+    font-size: 26px !important;
+  }
+
+  /* Courier card on mobile — vertical structure */
+  .courier-card {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0 !important;
+    padding: 0.75rem !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 0.75rem !important;
+    background: var(--surface) !important;
+  }
+
+  .courier-link {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0 !important;
+    flex: 1 !important;
+  }
+
+  /* Avatar styling on mobile */
+  .courier-link > div:first-child {
+    margin-bottom: 0.5rem !important;
+  }
+
+  /* Info container with name, location, bio */
+  .courier-info {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0 !important;
+    padding-bottom: 0.5rem !important;
+    border-bottom: 1px solid var(--border) !important;
+    margin-bottom: 0.5rem !important;
+  }
+
+  .courier-name {
+    font-weight: bold !important;
+    font-size: 0.875rem !important;
+    margin: 0 !important;
+    margin-bottom: 0.5rem !important;
+  }
+
+  /* Location row */
+  .courier-location {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.25rem !important;
+    flex-wrap: wrap !important;
+    font-size: 0.75rem !important;
+    padding-bottom: 0.5rem !important;
+    border-bottom: 1px solid var(--border) !important;
+    margin-bottom: 0 !important;
+  }
+
+  /* Rating row */
+  .courier-rating {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.25rem !important;
+    flex-wrap: wrap !important;
+    font-size: 0.75rem !important;
+    margin-left: 0 !important;
+    text-align: left !important;
+  }
+
+  /* Hide bio on mobile */
+  .courier-bio {
+    display: none !important;
+  }
+
+  /* FavoriteButton positioning */
+  .courier-card > button {
+    position: absolute !important;
+    top: 0.75rem !important;
+    right: 0.75rem !important;
+    margin-top: 0 !important;
+    padding: 8px !important;
   }
 
   /* Profile logout: full width on mobile */
