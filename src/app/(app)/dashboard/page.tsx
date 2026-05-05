@@ -212,7 +212,7 @@ async function CourierDashboard({ profile, userId }: { profile: Profile; userId:
   const firstName = profile.full_name.split(' ')[0]
 
   return (
-    <div className="p-6 max-w-5xl mx-auto">
+    <div className="p-6 max-w-5xl mx-auto" suppressHydrationWarning>
       <div className="mb-6 page-header">
         <h2 style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--brand-text)', letterSpacing: '-0.02em' }}>
           Привет, {firstName}
