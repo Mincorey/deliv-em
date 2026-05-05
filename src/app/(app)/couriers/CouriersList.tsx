@@ -37,29 +37,38 @@ export function CouriersList({ currentUserId }: Props) {
     const from = s.page * PAGE_SIZE
     const to   = from + PAGE_SIZE - 1
 
-    const { data: newCouriers } = await supabase
-      .from('profiles')
-      .select('*, courier_profile:courier_profiles(*)')
-      .eq('role', 'courier')
-      .eq('is_active', true)
-      .order('created_at', { ascending: false })
-      .range(from, to)
-
-    const rows = (newCouriers ?? []) as CourierRow[]
+    const res = await fetch(`/api/couriers?from=${from}&to=${to}`)
+    if (!res.ok) {
+      s.loading = false
+      setLoading(false)
+      return
+    }
+    const newCouriers = await res.json()
+    const rows = (Array.isArray(newCouriers) ? newCouriers : newCouriers.data ?? []) as CourierRow[]
     const ids  = rows.map((c) => c.id)
 
     if (ids.length > 0) {
-      const [{ data: ratings }, { data: tasks }] = await Promise.all([
-        supabase.from('ratings').select('to_user_id, score').in('to_user_id', ids),
-        supabase.from('tasks').select('courier_id').in('courier_id', ids).eq('status', 'completed'),
+      const [ratingsRes, tasksRes] = await Promise.all([
+        fetch('/api/ratings/batch', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ courierIds: ids }),
+        }),
+        fetch('/api/tasks/completed', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ courierIds: ids }),
+        }),
       ])
 
-      // Merge new ratings into map
+      const ratings = await ratingsRes.json()
+      const tasks = await tasksRes.json()
+
       setAvgRatingMap(prev => {
         const next = { ...prev }
         const sums: Record<string, number> = {}
         const cnts: Record<string, number> = {}
-        for (const r of ratings ?? []) {
+        for (const r of Array.isArray(ratings) ? ratings : []) {
           sums[r.to_user_id] = (sums[r.to_user_id] ?? 0) + r.score
           cnts[r.to_user_id] = (cnts[r.to_user_id] ?? 0) + 1
         }
@@ -71,7 +80,7 @@ export function CouriersList({ currentUserId }: Props) {
 
       setCompletedMap(prev => {
         const next = { ...prev }
-        for (const t of tasks ?? []) {
+        for (const t of Array.isArray(tasks) ? tasks : []) {
           if (t.courier_id) next[t.courier_id] = (next[t.courier_id] ?? 0) + 1
         }
         return next
