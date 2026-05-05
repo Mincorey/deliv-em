@@ -130,11 +130,9 @@ export function Topbar({ profile, notifications, unreadMessages }: TopbarProps) 
           </span>
           {unreadMessages > 0 && (
             <span
-              className="absolute flex items-center justify-center text-white rounded-full"
-              style={{ top: 2, right: 2, width: 14, height: 14, background: 'var(--green)', fontSize: '0.5rem', fontWeight: 800, lineHeight: 1 }}
-            >
-              {unreadMessages > 9 ? '9+' : unreadMessages}
-            </span>
+              className="absolute rounded-full"
+              style={{ top: 2, right: 2, width: 12, height: 12, background: 'var(--green)', border: '1.5px solid var(--glass-bg)' }}
+            />
           )}
         </Link>
 

@@ -161,50 +161,44 @@ export default async function RatingsPage({
           {couriers.length === 0 && (
             <AnimatedItem><EmptyState icon="directions_bike" text="Нет зарегистрированных курьеров" /></AnimatedItem>
           )}
-          {couriers.map((courier, index) => (
+          {couriers.map((courier) => (
             <AnimatedItem key={courier.id}>
             <Link href={`/profile/${courier.id}`} style={{ textDecoration: 'none' }}>
               <div
                 className="glass rounded-2xl p-4 flex items-center gap-4"
                 style={{ transition: 'box-shadow 0.15s', cursor: 'pointer' }}
               >
-                {/* Rank */}
-                <div style={{
-                  width: 32, height: 32, borderRadius: 9999, flexShrink: 0,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  background: index < 3 ? 'linear-gradient(135deg,#f59e0b,#d97706)' : 'var(--surface-alt)',
-                  color: index < 3 ? '#fff' : 'var(--text-3)',
-                  fontWeight: 800, fontSize: '0.8rem',
-                }}>
-                  {index + 1}
-                </div>
-
-                <Avatar name={courier.full_name} avatarUrl={courier.avatar_url} size={44} />
-
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-bold" style={{ color: 'var(--text-1)' }}>{courier.full_name}</span>
-                    {courier.is_verified && (
-                      <span className="material-symbols-outlined fill-icon" style={{ fontSize: 16, color: 'var(--brand)' }}>verified</span>
-                    )}
+                {/* Avatar + Name on left */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
+                  <Avatar name={courier.full_name} avatarUrl={courier.avatar_url} size={44} />
+                  <div style={{ minWidth: 0 }}>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-bold text-sm" style={{ color: 'var(--text-1)' }}>{courier.full_name}</span>
+                      {courier.is_verified && (
+                        <span className="material-symbols-outlined fill-icon" style={{ fontSize: 16, color: 'var(--brand)' }}>verified</span>
+                      )}
+                    </div>
                     {courier.courier_profiles?.is_available && (
                       <span style={{
                         fontSize: '0.65rem', fontWeight: 700, padding: '2px 8px',
-                        borderRadius: 9999, background: 'var(--green-soft)', color: 'var(--green)',
+                        borderRadius: 9999, background: 'var(--green-soft)', color: 'var(--green)', marginTop: '0.25rem',
                       }}>онлайн</span>
                     )}
                   </div>
-                  <div className="flex items-center gap-3 mt-0.5 flex-wrap">
+                </div>
+
+                {/* Rating + Info */}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div className="flex items-center gap-2 flex-wrap">
                     <StarRating rating={courier.courier_profiles?.rating ?? 5} />
-                    <span style={{ fontSize: '0.75rem', color: 'var(--text-3)' }}>
+                    <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#f59e0b' }}>
                       {(courier.courier_profiles?.rating ?? 5).toFixed(1)}
                     </span>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--text-3)' }}>·</span>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--text-3)' }}>
-                      {courier.courier_profiles?.completed_tasks ?? 0} выполнено
-                    </span>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--text-3)' }}>·</span>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--text-3)' }}>{courier.city}</span>
+                  </div>
+                  <div className="flex items-center gap-2 mt-0.5 flex-wrap" style={{ fontSize: '0.75rem', color: 'var(--text-3)' }}>
+                    <span>{courier.courier_profiles?.completed_tasks ?? 0} заданий</span>
+                    <span>·</span>
+                    <span>{courier.city}</span>
                   </div>
                 </div>
 

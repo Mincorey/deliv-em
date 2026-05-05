@@ -134,31 +134,28 @@ export function CouriersList({ currentUserId }: Props) {
                   {/* Avatar */}
                   <Avatar name={courier.full_name} avatarUrl={courier.avatar_url} size={48} />
 
-                  {/* Info container: name, location, rating */}
-                  <div className="courier-info">
-                    {/* Name row */}
-                    <p className="courier-name" style={{ color: 'var(--text-1)' }}>{courier.full_name}</p>
+                  {/* Name */}
+                  <p className="courier-name" style={{ color: 'var(--text-1)' }}>{courier.full_name}</p>
 
-                    {/* Location row */}
-                    <div className="courier-location">
-                      <span className="material-symbols-outlined" style={{ color: 'var(--text-3)', fontSize: 14 }}>location_on</span>
-                      <span style={{ color: 'var(--text-3)' }}>{courier.city}</span>
-                      {transport && (
-                        <>
-                          <span style={{ color: 'var(--text-4)' }}>·</span>
-                          <span className="material-symbols-outlined" style={{ color: 'var(--text-3)', fontSize: 14 }}>{transport.icon}</span>
-                          <span style={{ color: 'var(--text-3)' }}>{transport.label}</span>
-                        </>
-                      )}
-                    </div>
-
-                    {/* Bio (desktop only) */}
-                    {courier.bio && (
-                      <p className="courier-bio" style={{ color: 'var(--text-3)', maxWidth: 300 }}>{courier.bio}</p>
+                  {/* Location row */}
+                  <div className="courier-location">
+                    <span className="material-symbols-outlined" style={{ color: 'var(--text-3)', fontSize: 14 }}>location_on</span>
+                    <span style={{ color: 'var(--text-3)' }}>{courier.city}</span>
+                    {transport && (
+                      <>
+                        <span style={{ color: 'var(--text-4)' }}>·</span>
+                        <span className="material-symbols-outlined" style={{ color: 'var(--text-3)', fontSize: 14 }}>{transport.icon}</span>
+                        <span style={{ color: 'var(--text-3)' }}>{transport.label}</span>
+                      </>
                     )}
                   </div>
 
-                  {/* Rating row (desktop: right side) */}
+                  {/* Bio (desktop only) */}
+                  {courier.bio && (
+                    <p className="courier-bio" style={{ color: 'var(--text-3)', maxWidth: 300 }}>{courier.bio}</p>
+                  )}
+
+                  {/* Rating row */}
                   <div className="courier-rating">
                     {liveRating !== null ? (
                       <>

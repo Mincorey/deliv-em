@@ -100,8 +100,8 @@ export function FavoriteCourierCard({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            width: 36,
-            height: 36,
+            width: 28,
+            height: 28,
             borderRadius: '9999px',
             background: 'transparent',
             border: '1.5px solid var(--border)',
@@ -120,7 +120,7 @@ export function FavoriteCourierCard({
             e.currentTarget.style.borderColor = 'var(--border)'
           }}
         >
-          <span className="material-symbols-outlined" style={{ fontSize: 18 }}>close</span>
+          <span className="material-symbols-outlined" style={{ fontSize: 14 }}>close</span>
         </button>
       </div>
 

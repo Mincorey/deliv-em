@@ -110,8 +110,8 @@ export default function WalletPage() {
         </div>
         <p className="text-white text-xs font-bold tracking-widest uppercase" style={{ opacity: 0.7 }}>Текущий баланс</p>
         <div className="flex items-end gap-2 mt-2">
-          <span style={{ fontSize: '3rem', fontWeight: 900, color: '#fff' }}>{Math.round(profile?.wallet_balance ?? 0)}</span>
-          <span className="text-white font-bold text-xl mb-1">₽</span>
+          <span style={{ fontSize: '4rem', fontWeight: 900, color: '#fff' }}>{Math.round(profile?.wallet_balance ?? 0)}</span>
+          <span className="text-white font-bold text-2xl mb-1">₽</span>
         </div>
         <p className="text-white text-xs mt-1" style={{ opacity: 0.6 }}>Deliv&apos;em · Внутренний кошелёк</p>
       </AnimatedItem>

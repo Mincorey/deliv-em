@@ -673,3 +673,9 @@ Mobile optimization: global font size reduction on mobile devices (max-width: 76
 ---
 Extended mobile optimization on /couriers page: restructured courier card HTML for better mobile display. Mobile version now shows clear vertical layout: avatar with name row, divider, location and transport row, divider, rating and completed tasks row. Heart icon (add to favorites) positioned in top-right corner. Desktop version remains horizontal with avatar on left, info in center, rating on right. Increased Material Symbols icon sizes on mobile (26px instead of 24px) and restructured Bottom Navigation for better icon readability.
 ==============
+
+## 2026-05-05 (UI Refinements)
+Исправления интерфейса мобильной версии: на странице /couriers переделан layout карточки курьера — аватарка и имя теперь на одной строке слева (flex-row), а не центрированы. На странице /favorites уменьшена кнопка удаления из избранного: размер с 36x36 до 28x28, иконка уменьшена с 18px до 14px. На странице /wallet увеличена видимость текущего баланса: размер шрифта увеличен с 3rem до 4rem, размер символа ₽ с text-xl до text-2xl. На странице /ratings удален ранг-бейдж (оранжевый кружок с номером), переделан layout карточки курьера для лучшей читаемости: avatar + name слева, рейтинг и информация в центре, тип транспорта справа.
+---
+UI refinements on mobile: /couriers page — courier card now displays avatar and name on one line to the left (flex-row) instead of centered. /favorites page — reduced delete button from 36x36 to 28x28, icon from 18px to 14px. /wallet page — increased balance visibility: font size from 3rem to 4rem, ₽ symbol from text-xl to text-2xl. /ratings page — removed rank badge (orange circle with number), improved courier card layout: avatar+name on left, rating+info in center, transport on right.
+==============
