@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Image from 'next/image'
 import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { TRANSPORT_META } from '@/lib/types'
@@ -152,8 +153,15 @@ export default function PublicProfilePage() {
             boxShadow: '0 4px 16px rgba(0,0,0,0.25)',
           }}>
             {p.avatar_url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={p.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              <Image
+                src={p.avatar_url}
+                alt=""
+                width={72}
+                height={72}
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                quality={70}
+                unoptimized
+              />
             ) : (
               <span style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--brand-text)' }}>{initials}</span>
             )}
@@ -288,8 +296,15 @@ export default function PublicProfilePage() {
                       overflow: 'hidden',
                     }}>
                       {r.from_user?.avatar_url ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={r.from_user.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        <Image
+                          src={r.from_user.avatar_url}
+                          alt=""
+                          width={32}
+                          height={32}
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                          quality={70}
+                          unoptimized
+                        />
                       ) : (
                         <span style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--brand-text)' }}>{authorInitials}</span>
                       )}

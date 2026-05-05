@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useRef } from 'react'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { AvatarCropper } from '@/components/ui/AvatarCropper'
@@ -239,8 +240,15 @@ export default function ProfilePage() {
             title="Изменить фото"
           >
             {profile?.avatar_url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={profile.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              <Image
+                src={profile.avatar_url}
+                alt=""
+                width={72}
+                height={72}
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                quality={70}
+                unoptimized
+              />
             ) : (
               <span style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--brand-text)' }}>{initials}</span>
             )}

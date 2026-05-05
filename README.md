@@ -6,6 +6,32 @@ P2P delivery and task service for the Republic of Abkhazia. Customers post deliv
 
 ---
 
+## 📝 Changelog
+
+**[2026-05-05 14:30] Оптимизация изображений (Image Component)**
+
+Заменены неоптимизированные `<img>` элементы на Next.js компонент `Image` с автоматической оптимизацией:
+- Avatar.tsx: добавлен Image компонент с quality=70
+- profile/page.tsx: оптимизирован аватар профиля (72x72px)
+- profile/[id]/page.tsx: оптимизированы аватары в публичном профиле и отзывах
+- Все аватары используют `unoptimized` флаг для работы с Supabase URL
+- Размеры изображений явно указаны для лучшей производительности
+
+---
+
+**[2026-05-05 14:30] Image Optimization (Image Component)**
+
+Replaced unoptimized `<img>` elements with Next.js `Image` component for automatic optimization:
+- Avatar.tsx: added Image component with quality=70
+- profile/page.tsx: optimized profile avatar (72x72px)
+- profile/[id]/page.tsx: optimized avatars in public profile and reviews
+- All avatars use `unoptimized` flag for Supabase URL compatibility
+- Image dimensions explicitly specified for better performance
+
+==============
+
+---
+
 ## 📚 Documentation
 
 **All documentation is in the [`docs/`](./docs/) folder:**

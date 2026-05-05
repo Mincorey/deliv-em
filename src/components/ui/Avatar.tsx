@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import { getInitials } from '@/lib/utils'
 
 interface AvatarProps {
@@ -16,8 +17,15 @@ export function Avatar({ name, avatarUrl, size = 40 }: AvatarProps) {
       style={{ width: size, height: size, fontSize, flexShrink: 0 }}
     >
       {avatarUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={avatarUrl} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        <Image
+          src={avatarUrl}
+          alt={name}
+          width={size}
+          height={size}
+          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          quality={70}
+          unoptimized
+        />
       ) : (
         <span style={{ fontSize }}>{initials}</span>
       )}
