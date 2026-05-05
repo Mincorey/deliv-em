@@ -422,6 +422,10 @@ const [ratings, tasks] = await Promise.all([
   supabase.from('ratings').in('to_user_id', courierIds),
   supabase.from('tasks').in('courier_id', courierIds)
 ])
+
+// ✅ ИСПРАВЛЕНО [2026-05-05]
+// CouriersList.tsx уже использует Promise.all с batch запросами
+// Строки 52-55: запрашивает рейтинги и задачи одним запросом для всех курьеров
 ```
 
 2. **Отсутствует кэширование**
