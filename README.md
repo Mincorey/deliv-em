@@ -654,3 +654,16 @@ Refactor per audit: shared CitySelect extracted (4 duplicates → one), LandingC
 ---
 After logout, users are now redirected to the landing page (/) instead of the auth page (/auth).
 ==============
+
+
+## 2026-04-24 15:00
+Добавлен `suppressHydrationWarning` ко всем `motion.div` в `src/components/ui/Animated.tsx` для подавления ошибки гидратации, вызванной браузерными расширениями (bis_skin_checked и аналогичные атрибуты).
+---
+Added `suppressHydrationWarning` to all `motion.div` elements in `src/components/ui/Animated.tsx` to suppress hydration errors caused by browser extensions injecting attributes (e.g. `bis_skin_checked`).
+==============
+
+## 2026-05-05
+Оптимизация мобильной версии: глобальное уменьшение размера шрифтов на мобильных устройствах (max-width: 767px) на 12% (font-size: 0.88em) для лучшей читаемости и предотвращения переноса текста на кнопках. Переделана расстановка элементов в карточке курьера на мобильной версии: аватарка с именем → статус онлайна, рейтинг и тип перемещения → количество выполненных заданий → локация. Добавлена функция удаления курьера из избранного на странице /favorites с красивым модальным окном подтверждения и кнопкой удаления с иконкой. Создан новый компонент FavoriteCourierCard для управления избранными курьерами.
+---
+Mobile optimization: global font size reduction on mobile devices (max-width: 767px) by 12% (font-size: 0.88em) for better readability and to prevent text wrapping on buttons. Redesigned courier card layout on mobile: avatar with name → online status, rating and transport type → completed tasks count → location. Added courier removal functionality from favorites on /favorites page with a beautiful confirmation modal and delete button with icon. Created new FavoriteCourierCard component for managing favorite couriers.
+==============

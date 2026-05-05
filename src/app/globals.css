@@ -626,6 +626,11 @@ input[type=number] { appearance: textfield; -moz-appearance: textfield; }
 
 /* ── Mobile breakpoint (< 768px) ── */
 @media (max-width: 767px) {
+  /* Global mobile font size scale: reduce overall font sizes */
+  * {
+    font-size: 0.88em !important;
+  }
+
   /* Layout: hide sidebar, show bottom nav + safe-area spacer */
   .sidebar-auto       { display: none !important; }
   .bottom-nav         { display: flex !important; }
@@ -663,10 +668,7 @@ input[type=number] { appearance: textfield; -moz-appearance: textfield; }
     padding: 0.75rem 0.875rem;
     overflow: hidden;
     word-break: break-word;
-    font-size: 0.82rem;
   }
-  .task-card .font-bold  { font-size: 0.88rem; }
-  .task-card .font-black { font-size: 0.9rem; }
 
   .stat-card {
     padding: 0.875rem 1rem;
@@ -685,6 +687,46 @@ input[type=number] { appearance: textfield; -moz-appearance: textfield; }
     /* Prevent text overflow everywhere */
     overflow-wrap: break-word;
     word-break: break-word;
+  }
+
+  /* Mobile courier card layout */
+  .courier-card {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0.75rem !important;
+    padding: 1rem 0.875rem !important;
+    position: relative !important;
+  }
+
+  .courier-card > a {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0.75rem !important;
+    width: 100% !important;
+  }
+
+  .courier-card > button[style*="display: flex"] {
+    position: absolute !important;
+    top: 0.75rem !important;
+    right: 0.75rem !important;
+    margin-top: 0 !important;
+  }
+
+  .desktop-courier-layout {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  @media (max-width: 767px) {
+    .desktop-courier-layout {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.75rem;
+    }
   }
 
   /* Chat: full-bleed frame, exact viewport height

@@ -125,7 +125,7 @@ export function CouriersList({ currentUserId }: Props) {
             const liveCompleted = completedMap[courier.id] ?? 0
 
             return (
-              <div key={courier.id} className="courier-card" style={{ position: 'relative' }}>
+              <div key={courier.id} className="courier-card desktop-courier-layout" style={{ position: 'relative' }}>
                 <Link
                   href={`/profile/${courier.id}`}
                   style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0, textDecoration: 'none' }}

@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { Avatar } from '@/components/ui/Avatar'
 import { AnimatedPage, AnimatedItem, AnimatedList } from '@/components/ui/Animated'
+import { FavoriteCourierCard } from './FavoriteCourierCard'
 import { TRANSPORT_META } from '@/lib/types'
 import type { Profile, CourierProfile } from '@/lib/types'
 
@@ -79,29 +80,13 @@ function FavoriteList({
         const cp = person.courier_profile
         const transport = cp?.transport_type ? TRANSPORT_META[cp.transport_type] : null
         return (
-          <div key={person.id} className="courier-card">
-            <Avatar name={person.full_name} avatarUrl={person.avatar_url} size={48} />
-            <div className="flex-1 min-w-0">
-              <p className="font-bold text-sm" style={{ color: 'var(--text-1)' }}>{person.full_name}</p>
-              <div className="flex items-center gap-2 mt-0.5">
-                <span className="material-symbols-outlined" style={{ color: 'var(--text-3)', fontSize: 14 }}>location_on</span>
-                <span className="text-xs" style={{ color: 'var(--text-3)' }}>{person.city}</span>
-                {transport && (
-                  <>
-                    <span style={{ color: 'var(--text-4)' }}>·</span>
-                    <span className="text-xs" style={{ color: 'var(--text-3)' }}>{transport.label}</span>
-                  </>
-                )}
-              </div>
-              {cp && (
-                <div className="flex items-center gap-1 mt-1">
-                  <span className="font-bold text-xs" style={{ color: '#f59e0b' }}>{cp.rating?.toFixed(1)}</span>
-                  <span className="material-symbols-outlined fill-icon" style={{ color: '#f59e0b', fontSize: 12 }}>star</span>
-                  <span className="text-xs" style={{ color: 'var(--text-4)' }}>· {cp.completed_tasks} заданий</span>
-                </div>
-              )}
-            </div>
-          </div>
+          <FavoriteCourierCard
+            key={person.id}
+            person={person}
+            cp={cp}
+            transport={transport}
+            role={role}
+          />
         )
       })}
     </AnimatedList>
