@@ -8,6 +8,30 @@ P2P delivery and task service for the Republic of Abkhazia. Customers post deliv
 
 ## 📝 Changelog
 
+**[2026-05-05 16:50] Исправление ошибок маршрутизации (Routing 404 Fix)**
+
+Решена критическая проблема, при которой все маршруты возвращали 404:
+- Удалена старая директория `app/` в корне проекта, которая конфликтовала с `src/app/`
+- Next.js выбирал устаревшие API routes из `app/` вместо текущих из `src/app/`
+- Понижена версия Next.js с 16.2.3 на 15.5.15 для лучшей стабильности (Turbopack исправлены)
+- Все маршруты теперь работают корректно (статус 200 вместо 404)
+- Гидратация работает без ошибок
+
+---
+
+**[2026-05-05 16:50] Routing 404 Errors Fix (App Directory Conflict)**
+
+Fixed critical issue where all routes were returning 404:
+- Removed old `app/` directory at project root that conflicted with `src/app/`
+- Next.js was picking up outdated API routes from `app/` instead of current ones from `src/app/`
+- Downgraded Next.js from 16.2.3 to 15.5.15 for better stability (Turbopack issues resolved)
+- All routes now working correctly (status 200 instead of 404)
+- Hydration working without errors
+
+==============
+
+---
+
 **[2026-05-05 14:30] Оптимизация изображений (Image Component)**
 
 Заменены неоптимизированные `<img>` элементы на Next.js компонент `Image` с автоматической оптимизацией:
