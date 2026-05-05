@@ -8,6 +8,7 @@
 - **[ПОЛНЫЙ_АУДИТ_ПРОЕКТА_DELIV-EM.md](./ПОЛНЫЙ_АУДИТ_ПРОЕКТА_DELIV-EM.md)** — Полный аудит проекта с 30+ идеями улучшений
 - **[AUDIT_LOG_GUIDE.md](./AUDIT_LOG_GUIDE.md)** — Руководство по системе аудит логирования
 - **[AUDIT_DEPLOYMENT_CHECKLIST.md](./AUDIT_DEPLOYMENT_CHECKLIST.md)** — Чек-лист развёртывания audit_log
+- **[SOFT_DELETE_GUIDE.md](./SOFT_DELETE_GUIDE.md)** — Мягкое удаление данных с возможностью восстановления
 
 ### ⚙️ Инфраструктура
 - **[INFRASTRUCTURE_SETUP.md](./INFRASTRUCTURE_SETUP.md)** — Setup для Email, Rate Limiting, Logging, Sentry
