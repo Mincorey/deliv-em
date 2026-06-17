@@ -200,7 +200,7 @@ async function CourierDashboard({ profile, userId }: { profile: Profile; userId:
       .eq('status', 'published').neq('customer_id', userId)
       .order('created_at', { ascending: false }).limit(5),
     supabase.from('tasks').select('id').eq('courier_id', userId)
-      .in('status', ['matched', 'in_progress']).limit(1).maybeSingle(),
+      .in('status', ['matched', 'in_progress', 'awaiting_confirmation']).limit(1).maybeSingle(),
     supabase.from('ratings').select('score').eq('to_user_id', userId),
     supabase.from('tasks').select('id', { count: 'exact', head: true })
       .eq('courier_id', userId).eq('status', 'completed'),
@@ -223,36 +223,37 @@ async function CourierDashboard({ profile, userId }: { profile: Profile; userId:
       </div>
 
       <div className="grid grid-cols-2 gap-4 mb-6 sm:grid-cols-3">
-        <div className="stat-card card-enter">
-          <p className="label-sm">Мой рейтинг</p>
-          <div className="flex items-center gap-1 mt-2">
-            <span style={{ fontSize: '1.8rem', fontWeight: 900, color: '#f59e0b', lineHeight: 1 }}>
-              {avgRating !== null ? avgRating.toFixed(1) : '—'}
-            </span>
-            {avgRating !== null && (
-              <span className="material-symbols-outlined fill-icon" style={{ color: '#f59e0b', fontSize: 18 }}>star</span>
-            )}
+        <Link href="/ratings?tab=couriers" style={{ textDecoration: 'none' }}>
+          <div className="stat-card card-enter" style={{ cursor: 'pointer', transition: 'transform 0.15s, box-shadow 0.15s' }}>
+            <p className="label-sm">Мой рейтинг</p>
+            <div className="flex items-center gap-1 mt-2">
+              <span style={{ fontSize: '1.8rem', fontWeight: 900, color: '#f59e0b', lineHeight: 1 }}>
+                {avgRating !== null ? avgRating.toFixed(1) : '—'}
+              </span>
+              {avgRating !== null && (
+                <span className="material-symbols-outlined fill-icon" style={{ color: '#f59e0b', fontSize: 18 }}>star</span>
+              )}
+            </div>
           </div>
-        </div>
+        </Link>
 
-        <div className="stat-card card-enter">
-          <p className="label-sm">Выполнено</p>
-          <div style={{ fontSize: '1.8rem', fontWeight: 900, color: 'var(--green)', lineHeight: 1 }} className="mt-2">
-            {completedCount ?? 0}
+        <Link href="/orders?filter=completed" style={{ textDecoration: 'none' }}>
+          <div className="stat-card card-enter" style={{ cursor: 'pointer', transition: 'transform 0.15s, box-shadow 0.15s' }}>
+            <p className="label-sm">Выполнено</p>
+            <div style={{ fontSize: '1.8rem', fontWeight: 900, color: 'var(--green)', lineHeight: 1 }} className="mt-2">
+              {completedCount ?? 0}
+            </div>
           </div>
-        </div>
+        </Link>
 
-        <div className="stat-card card-enter">
-          <p className="label-sm">Активное задание</p>
-          <div style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-1)' }} className="mt-2">
-            {activeTaskRow ? '1 задание' : 'Нет'}
+        <Link href="/active" style={{ textDecoration: 'none' }}>
+          <div className="stat-card card-enter" style={{ cursor: 'pointer', transition: 'transform 0.15s, box-shadow 0.15s' }}>
+            <p className="label-sm">Активное задание</p>
+            <div style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-1)' }} className="mt-2">
+              {activeTaskRow ? '1 задание' : 'Нет'}
+            </div>
           </div>
-          {activeTaskRow && (
-            <Link href={`/tasks/${activeTaskRow.id}`}>
-              <button className="mt-2 btn-ghost text-xs" style={{ padding: '6px 12px' }}>Открыть</button>
-            </Link>
-          )}
-        </div>
+        </Link>
       </div>
 
       <div className="mb-4 flex items-center justify-between">

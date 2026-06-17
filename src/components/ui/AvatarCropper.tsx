@@ -223,7 +223,7 @@ const overlayStyle: React.CSSProperties = {
   position: 'fixed', inset: 0, zIndex: 200,
   background: 'rgba(0,0,0,0.6)',
   display: 'flex', alignItems: 'center', justifyContent: 'center',
-  padding: '1rem',
+  padding: 'max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right)) max(1rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left))',
   backdropFilter: 'blur(4px)',
 }
 
@@ -235,4 +235,6 @@ const modalStyle: React.CSSProperties = {
   maxWidth: 480,
   boxShadow: '0 24px 60px rgba(0,0,0,0.3)',
   border: '1.5px solid var(--border)',
+  maxHeight: '90vh',
+  overflowY: 'auto',
 }

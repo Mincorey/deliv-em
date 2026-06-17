@@ -194,6 +194,9 @@ export default function DateTimePicker({
             boxShadow: 'var(--shadow-md)',
             zIndex: 1000,
             padding: '1.25rem',
+            maxHeight: '80vh',
+            overflowY: 'auto',
+            maxWidth: 'calc(100vw - 2rem)',
           }}
         >
           {/* Month navigation */}

@@ -3,6 +3,17 @@
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useTransition, useState, useRef, useEffect } from 'react'
 
+const TASK_FILTERS_KEY = 'taskFeedFilters'
+
+interface TaskFilters {
+  type?: string
+  city?: string
+  minReward?: string
+  maxReward?: string
+  urgent?: string
+  sort?: string
+}
+
 const TASK_TYPES = [
   { value: 'all', label: 'Все типы' },
   { value: 'documents', label: 'Документы' },
@@ -123,6 +134,23 @@ export function FeedFilters({
   const router = useRouter()
   const searchParams = useSearchParams()
   const [, startTransition] = useTransition()
+
+  // Persist current filter state to localStorage
+  useEffect(() => {
+    const filters: TaskFilters = {
+      type: currentType !== 'all' ? currentType : undefined,
+      city: currentCity !== 'all' ? currentCity : undefined,
+      minReward: currentMinReward || undefined,
+      maxReward: currentMaxReward || undefined,
+      urgent: currentUrgent ? '1' : undefined,
+      sort: currentSort !== 'newest' ? currentSort : undefined,
+    }
+    // Only save non-empty values
+    const hasFilters = Object.values(filters).some(v => v !== undefined)
+    if (hasFilters || (currentType || currentCity || currentMinReward || currentMaxReward || currentUrgent || currentSort !== 'newest')) {
+      localStorage.setItem(TASK_FILTERS_KEY, JSON.stringify(filters))
+    }
+  }, [currentType, currentCity, currentMinReward, currentMaxReward, currentUrgent, currentSort])
 
   function update(key: string, value: string) {
     const params = new URLSearchParams(searchParams.toString())

@@ -790,7 +790,12 @@ input[type=number] { appearance: textfield; -moz-appearance: textfield; }
     flex: 1 !important;
     justify-content: center !important;
     text-align: center !important;
-    max-width: 110px !important;
+    max-width: 130px !important;
+    font-size: 0.62rem !important;
+    padding: 9px 12px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
   }
 
   /* Increase icon sizes on mobile */

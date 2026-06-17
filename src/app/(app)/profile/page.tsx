@@ -9,6 +9,7 @@ import { useToast } from '@/components/ui/Toast'
 import { Modal } from '@/components/ui/Modal'
 import { TRANSPORT_META, VEHICLE_TRANSPORT_TYPES } from '@/lib/types'
 import { CitySelect } from '@/components/ui/CitySelect'
+import { updateProfile, updateCourierTransport } from './actions'
 import type { Profile, CourierProfile, TransportType, PrivacySettings } from '@/lib/types'
 
 /* ── Phone formatter ── */
@@ -93,6 +94,7 @@ export default function ProfilePage() {
   const [birthDate, setBirthDate]   = useState('')
   const [transport, setTransport] = useState<TransportType>('foot')
   const [privacy, setPrivacy]     = useState<PrivacySettings>({})
+  const [soundNotifications, setSoundNotifications] = useState(true)
 
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -129,12 +131,37 @@ export default function ProfilePage() {
       }
     }
     load()
+
+    // Load notification preferences from localStorage
+    const soundEnabled = localStorage.getItem('soundNotificationsEnabled') !== 'false'
+    setSoundNotifications(soundEnabled)
   }, [])
+
+  // Persist sound notifications preference to localStorage
+  useEffect(() => {
+    localStorage.setItem('soundNotificationsEnabled', soundNotifications ? 'true' : 'false')
+  }, [soundNotifications])
 
   /* ── Avatar: open cropper on file select ── */
   function handleAvatarFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.show('Загрузите изображение (JPG, PNG, WebP)', 'error')
+      e.target.value = ''
+      return
+    }
+
+    // Validate file size (max 10MB)
+    const MAX_SIZE = 10 * 1024 * 1024 // 10MB
+    if (file.size > MAX_SIZE) {
+      toast.show(`Файл слишком большой. Максимум 10 МБ (ваш: ${(file.size / 1024 / 1024).toFixed(1)} МБ)`, 'error')
+      e.target.value = ''
+      return
+    }
+
     setCropFile(file)
     e.target.value = ''
   }
@@ -177,15 +204,21 @@ export default function ProfilePage() {
     const fullName = `${firstName} ${lastName}`.trim()
     const isoDate = birthDateToISO(birthDate)
 
-    const { error } = await supabase.from('profiles')
-      .update({ full_name: fullName, phone, city, bio: bio || null, birth_date: isoDate, privacy_settings: privacy })
-      .eq('id', profile.id)
-    if (error) { toast.show(error.message, 'error'); setLoading(false); return }
+    // Update profile using server action (uses admin client to bypass RLS)
+    const profileRes = await updateProfile({
+      full_name: fullName,
+      phone: phone || null,
+      city,
+      bio: bio || null,
+      birth_date: isoDate,
+      privacy_settings: privacy,
+    })
+    if (profileRes.error) { toast.show(profileRes.error, 'error'); setLoading(false); return }
 
+    // Update courier transport if applicable
     if (profile.role === 'courier') {
-      await supabase.from('courier_profiles')
-        .update({ transport_type: transport })
-        .eq('id', profile.id)
+      const cpRes = await updateCourierTransport(transport)
+      if (cpRes.error) { toast.show(cpRes.error, 'error'); setLoading(false); return }
     }
 
     setProfile((p) => p ? { ...p, full_name: fullName, phone, city, bio: bio || null, birth_date: isoDate, privacy_settings: privacy } : p)
@@ -210,14 +243,14 @@ export default function ProfilePage() {
         onCancel={() => setCropFile(null)}
       />
     )}
-    <div className="p-6 max-w-2xl mx-auto">
+    <div className="p-6 max-w-2xl mx-auto" suppressHydrationWarning>
       <h2 className="text-xl font-bold mb-5" style={{ color: 'var(--text-1)' }}>Настройки профиля</h2>
 
       {/* Main card */}
-      <div className="rounded-2xl p-6 mb-4" style={{ background: 'var(--surface)', border: '1.5px solid var(--border)', boxShadow: 'var(--shadow-sm)' }}>
+      <div className="rounded-2xl p-6 mb-4" style={{ background: 'var(--surface)', border: '1.5px solid var(--border)', boxShadow: 'var(--shadow-sm)' }} suppressHydrationWarning>
 
         {/* Avatar row */}
-        <div className="flex items-center gap-4 mb-6">
+        <div className="flex items-center gap-4 mb-6" suppressHydrationWarning>
           {/* Hidden file input */}
           <input
             ref={fileInputRef}
@@ -397,12 +430,12 @@ export default function ProfilePage() {
           )}
 
           {/* Privacy settings */}
-          <div>
+          <div suppressHydrationWarning>
             <label className="label-sm">Конфиденциальность</label>
             <p className="text-xs mb-3" style={{ color: 'var(--text-3)', marginTop: 2 }}>
               Выберите, что будет видно другим пользователям в вашем профиле
             </p>
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2" suppressHydrationWarning>
               <Toggle
                 value={!!privacy.show_phone}
                 onChange={(v) => setPrivacy((p) => ({ ...p, show_phone: v }))}
@@ -421,6 +454,21 @@ export default function ProfilePage() {
             </div>
           </div>
 
+          {/* Notification settings */}
+          <div suppressHydrationWarning>
+            <label className="label-sm">Уведомления</label>
+            <p className="text-xs mb-3" style={{ color: 'var(--text-3)', marginTop: 2 }}>
+              Управление звуковыми и тактильными уведомлениями
+            </p>
+            <div className="flex flex-col gap-2" suppressHydrationWarning>
+              <Toggle
+                value={soundNotifications}
+                onChange={setSoundNotifications}
+                label="Звуки и вибрация"
+              />
+            </div>
+          </div>
+
           <button
             className="btn-primary"
             style={{ justifyContent: 'center', padding: '14px' }}
@@ -433,7 +481,7 @@ export default function ProfilePage() {
       </div>
 
       {/* Logout */}
-      <div className="profile-logout-wrap">
+      <div className="profile-logout-wrap" suppressHydrationWarning>
         <button
           onClick={() => setLogoutConfirm(true)}
           className="profile-logout-btn"

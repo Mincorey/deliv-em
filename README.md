@@ -8,6 +8,122 @@ P2P delivery and task service for the Republic of Abkhazia. Customers post deliv
 
 ## 📝 Changelog
 
+**[2026-05-09 17:00] Исправление сохранения профиля и транспорта курьера (ИТОГОВОЕ)**
+
+Полностью исправлены проблемы с обновлением профиля и типа транспорта курьера:
+- Создана миграция для правильного создания таблицы courier_profiles с нужной структурой
+- Добавлена колонка transport_type с значением по умолчанию 'foot'
+- Улучшена логика updateCourierTransport: сначала пытается insert, при конфликте ключей делает update
+- Исправлена функция audit_trigger_func() для корректной работы с admin клиентом (service_role)
+- Триггер audit_profiles_trigger восстановлен и работает без ошибок
+- Тестировано: смена типа транспорта сохраняется корректно и персистится после обновления страницы
+- Исправлены гидрационные ошибки браузер-расширения с помощью suppressHydrationWarning
+
+---
+
+**[2026-05-09 17:00] Profile and Courier Transport Update Fixes (FINAL)**
+
+Fully resolved issues with profile and courier transport type updates:
+- Created migration to properly set up courier_profiles table with correct structure
+- Added transport_type column with 'foot' as default value
+- Improved updateCourierTransport logic: attempts insert first, then update on conflict
+- Fixed audit_trigger_func() to work correctly with admin client (service_role)
+- Restored audit_profiles_trigger which now works without errors
+- Tested: transport type changes persist correctly after page refresh
+- Fixed hydration errors from browser extensions using suppressHydrationWarning
+
+==============
+
+---
+
+**[2026-05-09 15:00] Система звуков и вибраций (Sound & Haptics Notifications)**
+
+Реализована система звуковых и тактильных уведомлений для ключевых событий:
+- Звуковые сигналы при новом сообщении (двойной звон)
+- Звуковой сигнал при принятии задачи (восходящие тоны)
+- Вибрация на мобильных устройствах для каждого события
+- Звуки генерируются с помощью Web Audio API (без внешних файлов)
+- Автоматическое возобновление аудиоконтекста при блокировке браузером
+- Различные паттерны звуков и вибрации для разных типов событий
+- Работает на всех платформах с поддержкой Web Audio API
+- Переключатель для отключения звуков и вибраций в профиле пользователя
+- Настройка сохраняется в localStorage и применяется ко всем уведомлениям
+- Исправлена React hydration ошибка - lazy инициализация Web Audio API
+
+---
+
+**[2026-05-09 15:00] Sound & Haptics Notification System**
+
+Implemented sound and haptic feedback for key user events:
+- Sound notifications on new message (double beep)
+- Sound notification on task acceptance (ascending tones)
+- Vibration feedback on mobile devices for each event
+- Sounds generated using Web Audio API (no external files needed)
+- Automatic audio context resumption if blocked by browser autoplay policy
+- Different sound patterns and vibration sequences for different event types
+- Compatible with all platforms supporting Web Audio API
+- Toggle in user profile to disable sound and haptic notifications
+- Settings saved to localStorage and applied to all notifications
+- Fixed React hydration error with lazy Web Audio API initialization
+
+==============
+
+---
+
+**[2026-05-09 14:45] Сохранение состояния фильтров (Filter Persistence)**
+
+Реализовано сохранение последних использованных фильтров пользователя в localStorage:
+- Фильтры курьеров: город, тип транспорта, минимальный рейтинг, поиск по имени
+- Фильтры задач: город, тип, диапазон оплаты, срочность, сортировка
+- Фильтры автоматически восстанавливаются при возврате на страницу
+- Для задач URL параметры имеют приоритет над localStorage (для sharing ссылок)
+- Реализовано через localStorage без влияния на БД
+
+---
+
+**[2026-05-09 14:45] Filter Persistence (Saving User Preferences)**
+
+Implemented localStorage-based filter persistence for better UX:
+- Courier filters: city, transport type, minimum rating, name search
+- Task feed filters: city, type, reward range, urgency, sorting
+- Filters automatically restored when user returns to the page
+- For tasks, URL parameters take priority over localStorage (for link sharing)
+- Implemented using localStorage with no database changes
+
+==============
+
+---
+
+**[2026-05-09 14:35] Система прочитанных квитанций в чате (Message Delivery Receipts)**
+
+Реализована система отслеживания доставки и чтения сообщений как в WhatsApp:
+- Добавлены колонки `delivered_at` и `read_at` в таблицу messages
+- Сообщения отмечаются как доставленные когда клиент получает их через realtime
+- Сообщения отмечаются как прочитанные когда пользователь открывает чат
+- Добавлены API endpoints `/api/messages/mark-delivered` и `/api/messages/mark-read`
+- Реализованы visual indicators (чекмарки) в UI чата:
+  * 1 чекмарк = сообщение отправлено и доставлено
+  * 2 чекмарка (синие) = сообщение прочитано партнером
+- Улучшена realtime логика для синхронизации статусов в реальном времени
+
+---
+
+**[2026-05-09 14:35] Message Delivery Receipts System (WhatsApp-style)**
+
+Implemented message delivery and read tracking system similar to WhatsApp:
+- Added `delivered_at` and `read_at` timestamp columns to messages table
+- Messages marked as delivered when client receives them via realtime subscription
+- Messages marked as read when user opens the chat
+- Created API endpoints `/api/messages/mark-delivered` and `/api/messages/mark-read`
+- Added visual indicators (checkmarks) in chat UI:
+  * 1 checkmark = message sent and delivered
+  * 2 checkmarks (blue) = message read by recipient
+- Enhanced realtime logic for real-time status synchronization
+
+==============
+
+---
+
 **[2026-05-05 16:50] Исправление ошибок маршрутизации (Routing 404 Fix)**
 
 Решена критическая проблема, при которой все маршруты возвращали 404:
@@ -784,3 +900,17 @@ Fixed result type annotations in authentication functions for better code clarit
 ---
 Added caching infrastructure to optimize performance. Created three new API routes using Next.js `unstable_cache`: `/api/couriers` (caches courier list for 5 minutes), `/api/ratings/batch` (caches ratings for 10 minutes), `/api/tasks/completed` (caches completed tasks for 10 minutes). Updated `CouriersList.tsx` to use cached API routes instead of direct Supabase queries, reducing database load and improving page load time. Caching system uses built-in Next.js mechanism with automatic revalidation on cache expiry and support for `revalidatePath` to invalidate cache on data updates.
 ==============
+
+---
+[2026-06-17]
+Проведён полный технический аудит проекта. Создан отчёт `AUDIT_2026-06-17.md` (анализ архитектуры Next.js + Supabase, проверка живой БД через advisors, разбор денежной логики кошелька, RLS-политик и готовности к деплою на GitHub/Vercel). Выявлены критичные проблемы: неатомарные операции с балансом и отсутствие идемпотентности webhook AnyPay, тест-пополнение кошелька без оплаты, RLS-политика `profiles_self` позволяет клиенту менять свой баланс, опасные SECURITY DEFINER функции/вьюхи доступны роли anon. Изменений в коде не вносилось — только отчёт.
+---
+[2026-06-17]
+Full technical audit performed. Created report `AUDIT_2026-06-17.md` (Next.js + Supabase architecture review, live DB advisors check, wallet money-flow analysis, RLS policies, GitHub/Vercel deploy readiness). Critical issues found: non-atomic balance operations and missing AnyPay webhook idempotency, free wallet top-up without payment, `profiles_self` RLS policy lets clients edit their own balance, dangerous SECURITY DEFINER functions/views exposed to the anon role. No code changes — report only.
+
+---
+[2026-06-17]
+Исправлено рассогласование middleware с версией Next. Файл `src/proxy.ts` (конвенция Next.js 16) переименован обратно в `src/middleware.ts`, а экспорт `proxy` → `middleware` — под зафиксированную в package-lock версию Next 15.5.15. До этого middleware не запускался (Next 15.x не распознаёт proxy.ts), и защита маршрутов держалась только на проверке в (app)/layout.tsx. Теперь middleware снова активен.
+---
+[2026-06-17]
+Fixed middleware/Next version mismatch. Renamed `src/proxy.ts` (a Next.js 16 convention) back to `src/middleware.ts` and the export `proxy` → `middleware`, to match the Next 15.5.15 version locked in package-lock. Previously the middleware was not running (Next 15.x does not recognize proxy.ts), so route protection relied solely on the check in (app)/layout.tsx. The middleware is now active again.

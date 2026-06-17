@@ -5,13 +5,16 @@ import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { Avatar } from '@/components/ui/Avatar'
+import { useToast } from '@/components/ui/Toast'
 import { sendChatMessage } from '../actions'
+import { playSound } from '@/lib/sounds'
 import type { Message, Profile } from '@/lib/types'
 
 export default function ChatPage() {
   const params = useParams()
   const router = useRouter()
   const supabase = createClient()
+  const toast = useToast()
   const taskId = params.taskId as string
 
   const [currentUser, setCurrentUser] = useState<Profile | null>(null)
@@ -22,6 +25,7 @@ export default function ChatPage() {
   const [loading, setLoading]         = useState(true)
   const [sending, setSending]         = useState(false)
   const [sendError, setSendError]     = useState('')
+  const [isConnected, setIsConnected] = useState(true)
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef  = useRef<HTMLInputElement>(null)
   // Refs keep latest profiles accessible inside realtime closure without stale values
@@ -62,15 +66,31 @@ export default function ChatPage() {
         .eq('task_id', taskId)
         .order('created_at', { ascending: true })
 
-      setMessages((msgs ?? []) as (Message & { sender: Profile })[])
+      const messages = (msgs ?? []) as (Message & { sender: Profile })[]
+      setMessages(messages)
       setLoading(false)
 
-      // Mark incoming as read
-      await supabase
-        .from('messages')
-        .update({ is_read: true })
-        .eq('task_id', taskId)
-        .neq('sender_id', user.id)
+      // Mark incoming messages as delivered (if not already)
+      for (const msg of messages) {
+        if (msg.sender_id !== user.id && !msg.delivered_at) {
+          await fetch('/api/messages/mark-delivered', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ messageId: msg.id }),
+          }).catch(() => null)
+        }
+      }
+
+      // Mark incoming messages as read (if not already)
+      for (const msg of messages) {
+        if (msg.sender_id !== user.id && !msg.read_at) {
+          await fetch('/api/messages/mark-read', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ messageId: msg.id }),
+          }).catch(() => null)
+        }
+      }
     }
 
     init()
@@ -109,14 +129,37 @@ export default function ChatPage() {
             return [...withoutOptimistic, newMsg]
           })
 
-          // Mark as read if from partner
+          // If message is from partner, mark as delivered and read, and play notification
           const { data: { user } } = await supabase.auth.getUser()
           if (payload.new.sender_id !== user?.id) {
-            await supabase.from('messages').update({ is_read: true }).eq('id', payload.new.id)
+            // Play notification sound
+            playSound('message')
+
+            if (!payload.new.delivered_at) {
+              await fetch('/api/messages/mark-delivered', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ messageId: payload.new.id }),
+              }).catch(() => null)
+            }
+            if (!payload.new.read_at) {
+              await fetch('/api/messages/mark-read', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ messageId: payload.new.id }),
+              }).catch(() => null)
+            }
           }
         }
       )
-      .subscribe()
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          setIsConnected(true)
+        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+          setIsConnected(false)
+          toast.show('Потеряно соединение', 'error')
+        }
+      })
 
     return () => { supabase.removeChannel(channel) }
   }, [taskId])
@@ -132,15 +175,18 @@ export default function ChatPage() {
     setSending(true)
     setInput('')
 
-    // Optimistically show the message immediately
+    // Optimistically show the message immediately (from my perspective it's already delivered)
     const tempId = `opt_${Date.now()}`
+    const now = new Date().toISOString()
     const optimistic: Message & { sender: Profile } = {
       id: tempId,
       task_id: taskId,
       sender_id: currentUser.id,
       content: text,
       is_read: false,
-      created_at: new Date().toISOString(),
+      created_at: now,
+      delivered_at: now,
+      read_at: null,
       sender: currentUser,
     }
     setMessages((prev) => [...prev, optimistic])
@@ -153,6 +199,7 @@ export default function ChatPage() {
       setMessages((prev) => prev.filter((m) => m.id !== tempId))
       setSendError(res.error)
       setInput(text)
+      toast.show(res.error, 'error')
     }
 
     inputRef.current?.focus()
@@ -256,18 +303,45 @@ export default function ChatPage() {
                   }}>
                     {msg.content}
                   </div>
-                  <p style={{
+                  <div style={{
+                    display: 'flex', alignItems: 'center', gap: 3,
                     fontSize: '0.65rem', color: 'var(--text-4)',
                     marginTop: 2, paddingLeft: isMe ? 0 : 4, paddingRight: isMe ? 4 : 0,
                   }}>
-                    {time}
-                  </p>
+                    <span>{time}</span>
+                    {isMe && (
+                      <span style={{
+                        display: 'flex', gap: 1, alignItems: 'center',
+                        color: msg.read_at ? 'var(--green)' : 'var(--text-4)',
+                      }}>
+                        {/* First checkmark: delivered */}
+                        <span style={{ fontSize: '0.7rem' }}>✓</span>
+                        {/* Second checkmark: read (appears only if message is read) */}
+                        {msg.read_at && <span style={{ fontSize: '0.7rem' }}>✓</span>}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
             )
           })}
           <div ref={bottomRef} />
         </div>
+
+        {/* Connection status */}
+        {!isConnected && (
+          <div style={{
+            padding: '8px 18px',
+            fontSize: '0.8rem', color: '#ff9800',
+            background: 'rgba(255,152,0,0.1)',
+            borderTop: '1px solid rgba(255,152,0,0.2)',
+            flexShrink: 0,
+            display: 'flex', alignItems: 'center', gap: 8,
+          }}>
+            <span className="material-symbols-outlined" style={{ fontSize: 16 }}>wifi_off</span>
+            Нет соединения — сообщения не синхронизируются
+          </div>
+        )}
 
         {/* Error message */}
         {sendError && (

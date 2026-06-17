@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/Badge'
 import { RatingBlock } from '@/components/tasks/RatingBlock'
 import { useToast } from '@/components/ui/Toast'
 import { acceptTask, startTask, completeTask, confirmTask, rejectCompletion, cancelTask } from '../actions'
+import { playSound } from '@/lib/sounds'
 import { TASK_TYPE_META, STATUS_META, type TaskWithProfiles, type Profile } from '@/lib/types'
 import { formatDate } from '@/lib/utils'
 import { TaskRouteMap } from '@/components/ui/TaskRouteMap'
@@ -171,6 +172,21 @@ export default function TaskDetailPage() {
     if (res.error) {
       toast.show(res.error, 'error')
     } else {
+      toast.show('Готово!', 'success')
+      const { data } = await supabase
+        .from('tasks')
+        .select(`*, customer:profiles!tasks_customer_id_fkey(id, full_name, avatar_url, role, city), courier:profiles!tasks_courier_id_fkey(id, full_name, avatar_url, role, city)`)
+        .eq('id', task!.id).single()
+      setTask(data as unknown as TaskWithProfiles)
+    }
+  }
+
+  async function handleAcceptTask() {
+    const res = await acceptTask(task!.id)
+    if (res.error) {
+      toast.show(res.error, 'error')
+    } else {
+      playSound('task_accepted')
       toast.show('Готово!', 'success')
       const { data } = await supabase
         .from('tasks')
@@ -370,7 +386,7 @@ export default function TaskDetailPage() {
           {/* Courier: accept published task */}
           {!isCustomer && task.status === 'published' && (
             <button className="btn-green w-full" style={{ justifyContent: 'center', padding: '14px' }}
-              onClick={() => handle(() => acceptTask(task.id))}>
+              onClick={handleAcceptTask}>
               <span className="material-symbols-outlined text-base">check_circle</span>
               Принять поручение
             </button>
